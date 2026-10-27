@@ -26,7 +26,6 @@ import (
 	"gitea.dev/modules/optional"
 	"gitea.dev/modules/setting/config"
 	api "gitea.dev/modules/structs"
-	"gitea.dev/tests"
 
 	agents_service "gitea.dev/services/agents"
 	repo_service "gitea.dev/services/repository"
@@ -80,104 +79,107 @@ func (f *agentSessionFixture) token(t testing.TB, triggerUserID, sessionID int64
 }
 
 func TestAgentSessionTokenAPI(t *testing.T) {
-	defer tests.PrepareTestEnv(t)()
-	f := newAgentFixture(t)
-	issueURL := "/api/v1/repos/user2/repo1/issues"
-	newIssue := &api.CreateIssueOption{Title: "from an agent", Body: "body"}
+	onGiteaRun(t, func(t *testing.T, _ *url.URL) { // the git hooks of the agent repository need the internal server
+		f := newAgentFixture(t)
+		issueURL := "/api/v1/repos/user2/repo1/issues"
+		newIssue := &api.CreateIssueOption{Title: "from an agent", Body: "body"}
 
-	t.Run("TriggerCanWrite", func(t *testing.T) {
-		token := f.token(t, 2, 1)
-		resp := MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(token), http.StatusOK)
-		assert.Equal(t, f.bot.Name, DecodeJSON(t, resp, &api.User{}).UserName)
-		MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusCreated)
-	})
+		t.Run("TriggerCanWrite", func(t *testing.T) {
+			token := f.token(t, 2, 1)
+			resp := MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(token), http.StatusOK)
+			assert.Equal(t, f.bot.Name, DecodeJSON(t, resp, &api.User{}).UserName)
+			MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusCreated)
+		})
 
-	t.Run("TriggerCannotWriteSoSessionCannot", func(t *testing.T) {
-		token := f.token(t, 5, 2) // user5 only reads the public repository, although the bot has write access
-		MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo1").AddTokenAuth(token), http.StatusOK)
-		MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusForbidden)
-		// the private repository is invisible to the person, so it is to the session
-		MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo2").AddTokenAuth(token), http.StatusNotFound)
-	})
+		t.Run("TriggerCannotWriteSoSessionCannot", func(t *testing.T) {
+			token := f.token(t, 5, 2) // user5 only reads the public repository, although the bot has write access
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo1").AddTokenAuth(token), http.StatusOK)
+			MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusForbidden)
+			// the private repository is invisible to the person, so it is to the session
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo2").AddTokenAuth(token), http.StatusNotFound)
+		})
 
-	t.Run("AdministrationAndOrganizationsAreOutOfReach", func(t *testing.T) {
-		token := f.token(t, 1, 3) // even when the triggering user is a site administrator
-		MakeRequest(t, NewRequest(t, "GET", "/api/v1/admin/users").AddTokenAuth(token), http.StatusForbidden)
-		MakeRequest(t, NewRequestWithJSON(t, "POST", "/api/v1/admin/users", &api.CreateUserOption{Username: "evil", Email: "evil@example.com", Password: "password123!"}).AddTokenAuth(token), http.StatusForbidden)
-		MakeRequest(t, NewRequest(t, "GET", "/api/v1/orgs/org3/members").AddTokenAuth(token), http.StatusForbidden)
-		MakeRequest(t, NewRequest(t, "GET", "/api/v1/user/settings").AddTokenAuth(token), http.StatusForbidden)
-		unittest.AssertNotExistsBean(t, &user_model.User{LowerName: "evil"})
-	})
+		t.Run("AdministrationAndOrganizationsAreOutOfReach", func(t *testing.T) {
+			token := f.token(t, 1, 3) // even when the triggering user is a site administrator
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/admin/users").AddTokenAuth(token), http.StatusForbidden)
+			MakeRequest(t, NewRequestWithJSON(t, "POST", "/api/v1/admin/users", &api.CreateUserOption{Username: "evil", Email: "evil@example.com", Password: "password123!"}).AddTokenAuth(token), http.StatusForbidden)
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/orgs/org3/members").AddTokenAuth(token), http.StatusForbidden)
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/user/settings").AddTokenAuth(token), http.StatusForbidden)
+			unittest.AssertNotExistsBean(t, &user_model.User{LowerName: "evil"})
+		})
 
-	t.Run("RepositorySearchIsLimitedToWhatBothCanSee", func(t *testing.T) {
-		names := func(token string) []string {
-			resp := MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/search?q=repo&limit=50").AddTokenAuth(token), http.StatusOK)
-			var res api.SearchResults
-			DecodeJSON(t, resp, &res)
-			var out []string
-			for _, r := range res.Data {
-				out = append(out, r.FullName)
+		t.Run("RepositorySearchIsLimitedToWhatBothCanSee", func(t *testing.T) {
+			names := func(token string) []string {
+				resp := MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/search?q=repo&limit=50").AddTokenAuth(token), http.StatusOK)
+				var res api.SearchResults
+				DecodeJSON(t, resp, &res)
+				var out []string
+				for _, r := range res.Data {
+					out = append(out, r.FullName)
+				}
+				return out
 			}
-			return out
-		}
-		assert.Contains(t, names(f.token(t, 2, 4)), "user2/repo2")    // the bot and the owner both see it
-		assert.NotContains(t, names(f.token(t, 5, 5)), "user2/repo2") // the bot does, the triggering user does not
+			assert.Contains(t, names(f.token(t, 2, 4)), "user2/repo2")    // the bot and the owner both see it
+			assert.NotContains(t, names(f.token(t, 5, 5)), "user2/repo2") // the bot does, the triggering user does not
+		})
 	})
 }
 
 func TestAgentSessionTokenLifetime(t *testing.T) {
-	defer tests.PrepareTestEnv(t)()
-	f := newAgentFixture(t)
-	check := func(token string, status int) {
-		MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(token), status)
-	}
+	onGiteaRun(t, func(t *testing.T, _ *url.URL) { // the git hooks of the agent repository need the internal server
+		f := newAgentFixture(t)
+		check := func(token string, status int) {
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(token), status)
+		}
 
-	t.Run("RefusedOnceTheRunEnded", func(t *testing.T) {
-		token := f.token(t, 2, 1)
-		check(token, http.StatusOK)
-		_, err := db.GetEngine(t.Context()).Exec("UPDATE action_run SET status = ? WHERE id = ?", actions_model.StatusSuccess, f.run.ID)
-		require.NoError(t, err)
-		check(token, http.StatusUnauthorized)
-		_, err = db.GetEngine(t.Context()).Exec("UPDATE action_run SET status = ? WHERE id = ?", actions_model.StatusRunning, f.run.ID)
-		require.NoError(t, err)
-	})
+		t.Run("RefusedOnceTheRunEnded", func(t *testing.T) {
+			token := f.token(t, 2, 1)
+			check(token, http.StatusOK)
+			_, err := db.GetEngine(t.Context()).Exec("UPDATE action_run SET status = ? WHERE id = ?", actions_model.StatusSuccess, f.run.ID)
+			require.NoError(t, err)
+			check(token, http.StatusUnauthorized)
+			_, err = db.GetEngine(t.Context()).Exec("UPDATE action_run SET status = ? WHERE id = ?", actions_model.StatusRunning, f.run.ID)
+			require.NoError(t, err)
+		})
 
-	t.Run("RefusedOnceAgentsAreDisabled", func(t *testing.T) {
-		token := f.token(t, 2, 2)
-		check(token, http.StatusOK)
-		setAgentsEnabled(t, false)
-		check(token, http.StatusUnauthorized)
-		setAgentsEnabled(t, true)
-	})
+		t.Run("RefusedOnceAgentsAreDisabled", func(t *testing.T) {
+			token := f.token(t, 2, 2)
+			check(token, http.StatusOK)
+			setAgentsEnabled(t, false)
+			check(token, http.StatusUnauthorized)
+			setAgentsEnabled(t, true)
+		})
 
-	t.Run("RefusedWhenTheTriggeringUserIsGone", func(t *testing.T) {
-		token := f.token(t, 5, 3)
-		check(token, http.StatusOK)
-		require.NoError(t, user_model.UpdateUserCols(t.Context(), &user_model.User{ID: 5, ProhibitLogin: true}, "prohibit_login"))
-		check(token, http.StatusUnauthorized)
-	})
+		t.Run("RefusedWhenTheTriggeringUserIsGone", func(t *testing.T) {
+			token := f.token(t, 5, 3)
+			check(token, http.StatusOK)
+			require.NoError(t, user_model.UpdateUserCols(t.Context(), &user_model.User{ID: 5, ProhibitLogin: true}, "prohibit_login"))
+			check(token, http.StatusUnauthorized)
+		})
 
-	t.Run("UnknownTokensAreRefused", func(t *testing.T) {
-		check(agents_model.SessionTokenPrefix+"0123456789012345678901234567890123456789", http.StatusUnauthorized)
+		t.Run("UnknownTokensAreRefused", func(t *testing.T) {
+			check(agents_model.SessionTokenPrefix+"0123456789012345678901234567890123456789", http.StatusUnauthorized)
+		})
 	})
 }
 
 func TestAgentBotPersonalTokensAreRefused(t *testing.T) {
-	defer tests.PrepareTestEnv(t)()
-	f := newAgentFixture(t)
-	ctx := t.Context()
+	onGiteaRun(t, func(t *testing.T, _ *url.URL) { // the git hooks of the agent repository need the internal server
+		f := newAgentFixture(t)
+		ctx := t.Context()
 
-	pat := &auth_model.AccessToken{UID: f.bot.ID, Name: "permanent", Scope: auth_model.AccessTokenScopeAll}
-	require.NoError(t, auth_model.NewAccessToken(ctx, pat))
-	MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(pat.Token), http.StatusUnauthorized)
-	MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddBasicAuth(f.bot.Name), http.StatusUnauthorized)
+		pat := &auth_model.AccessToken{UID: f.bot.ID, Name: "permanent", Scope: auth_model.AccessTokenScopeAll}
+		require.NoError(t, auth_model.NewAccessToken(ctx, pat))
+		MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(pat.Token), http.StatusUnauthorized)
+		MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddBasicAuth(f.bot.Name), http.StatusUnauthorized)
 
-	// a bot that is not an agent keeps working exactly as before
-	plain := &user_model.User{Name: "plain-bot", Email: "plain-bot@example.com", Type: user_model.UserTypeBot}
-	require.NoError(t, user_model.CreateUser(ctx, plain, &user_model.Meta{}, &user_model.CreateUserOverwriteOptions{IsActive: optional.Some(true)}))
-	plainPAT := &auth_model.AccessToken{UID: plain.ID, Name: "permanent", Scope: auth_model.AccessTokenScopeAll}
-	require.NoError(t, auth_model.NewAccessToken(ctx, plainPAT))
-	MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(plainPAT.Token), http.StatusOK)
+		// a bot that is not an agent keeps working exactly as before
+		plain := &user_model.User{Name: "plain-bot", Email: "plain-bot@example.com", Type: user_model.UserTypeBot}
+		require.NoError(t, user_model.CreateUser(ctx, plain, &user_model.Meta{}, &user_model.CreateUserOverwriteOptions{IsActive: optional.Some(true)}))
+		plainPAT := &auth_model.AccessToken{UID: plain.ID, Name: "permanent", Scope: auth_model.AccessTokenScopeAll}
+		require.NoError(t, auth_model.NewAccessToken(ctx, plainPAT))
+		MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(plainPAT.Token), http.StatusOK)
+	})
 }
 
 func TestAgentSessionTokenGitPush(t *testing.T) {
