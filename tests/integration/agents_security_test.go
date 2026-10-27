@@ -238,8 +238,12 @@ func TestAgentSessionTokenGitPush(t *testing.T) {
 			readerDir := t.TempDir()
 			readerToken := f.token(t, 5, sessionID)
 			doGitClone(readerDir, remote(readerToken, "/user2/repo1.git"))(t)
-			commit(readerDir, "r.txt")
-			doGitPushTestRepositoryFail(readerDir, "origin", sessionBranch)(t)
+			// a branch that does not exist yet, so that only the permission can make the push fail (not a non-fast-forward)
+			freshBranch := fmt.Sprintf("agent/%d/reader", sessionID)
+			_, _, err := gitcmd.NewCommand("checkout", "-B").AddDynamicArguments(freshBranch).WithDir(readerDir).RunStdString(t.Context())
+			require.NoError(t, err)
+			doGitCheckoutWriteFileCommit(localGitAddCommitOptions{LocalRepoPath: readerDir, CheckoutBranch: freshBranch, TreeFilePath: "r.txt", TreeFileContent: "r"})(t)
+			doGitPushTestRepositoryFail(readerDir, "origin", freshBranch)(t)
 		})
 
 		t.Run("PrivateRepositoryOfAnotherUserIsHidden", func(t *testing.T) {
