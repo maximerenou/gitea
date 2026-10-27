@@ -1,0 +1,26 @@
+# Dev environment: forked Gitea + Actions runner + Ollama. Image names/tags marked TODO must be verified before first use.
+services:
+  gitea:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    ports: ["3000:3000", "2222:22"]
+    environment:
+      GITEA__actions__ENABLED: "true"
+      GITEA__server__ROOT_URL: http://gitea:3000/
+    volumes: [gitea-data:/data]
+  runner:
+    image: gitea/act_runner:latest   # TODO verify image (docs mention gitea.com/gitea/runner)
+    depends_on: [gitea]
+    environment:
+      GITEA_INSTANCE_URL: http://gitea:3000
+      GITEA_RUNNER_REGISTRATION_TOKEN: ${RUNNER_TOKEN:?set RUNNER_TOKEN}
+      GITEA_RUNNER_LABELS: ubuntu-latest:docker://gitea-agents-runner:dev
+    volumes: [/var/run/docker.sock:/var/run/docker.sock]
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes: [ollama-data:/root/.ollama]
+volumes:
+  gitea-data:
+  ollama-data:
