@@ -29,6 +29,7 @@ import (
 	"gitea.dev/modules/web/types"
 	"gitea.dev/routers/common"
 	"gitea.dev/routers/web/admin"
+	agents_web "gitea.dev/routers/web/agents" // AGENTS-HOOK: agents routes
 	"gitea.dev/routers/web/auth"
 	"gitea.dev/routers/web/devtest"
 	"gitea.dev/routers/web/explore"
@@ -906,7 +907,9 @@ func registerWebRoutes(m *web.Router, webAuth *AuthMiddleware) {
 			addSettingsScopedWorkflowsRoutes()
 			m.Get("/job_queue", shared_actions.JobQueue)
 		})
-	}, adminReq, ctxDataSet(reqctx.ContextData{"EnableOAuth2": setting.OAuth2.Enabled, "EnablePackages": setting.Packages.Enabled}))
+
+		agents_web.RegisterAdminRoutes(m) // AGENTS-HOOK: site administration pages of the agents feature
+	}, adminReq, ctxDataSet(reqctx.ContextData{"EnableOAuth2": setting.OAuth2.Enabled, "EnablePackages": setting.Packages.Enabled}), agents_web.AdminContext) // AGENTS-HOOK: navbar data
 	// ***** END: Admin *****
 
 	m.Methods("GET, OPTIONS", "/attachments/{uuid}", optionsCorsHandler(), webAuth.AllowBasic, webAuth.AllowOAuth2, optSignIn, repo.GetAttachment)

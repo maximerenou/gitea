@@ -1,0 +1,74 @@
+{{template "admin/layout_head" (dict "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.agent"}}</h4>
+		<div class="ui attached segment">
+			<form class="ui form" action="{{.Link}}" method="post">
+				{{.CsrfTokenHtml}}
+				{{template "base/disable_form_autofill"}}
+				<div class="required field">
+					<label for="name">{{ctx.Locale.Tr "agents.agent.name"}}</label>
+					{{if .IsNew}}
+						<input id="name" name="name" value="{{.Agent.Name}}" maxlength="40" required autofocus>
+						<div class="help">{{ctx.Locale.Tr "agents.agent.name_help"}}</div>
+					{{else}}
+						<input id="name" value="{{.Agent.Name}}" disabled>
+					{{end}}
+				</div>
+				<div class="required field">
+					<label for="action">{{ctx.Locale.Tr "agents.agent.action"}}</label>
+					{{if .IsNew}}
+						<select id="action" name="action" class="ui dropdown">
+							{{range .Actions}}<option value="{{.}}" {{if eq . $.Agent.Action}}selected{{end}}>{{.Role}} ({{.}})</option>{{end}}
+						</select>
+						<div class="help">{{ctx.Locale.Tr "agents.agent.action_help"}}</div>
+					{{else}}
+						<input id="action" value="{{.Agent.Action.Role}} ({{.Agent.Action}})" disabled>
+					{{end}}
+				</div>
+				<div class="required field">
+					<label for="connection_id">{{ctx.Locale.Tr "agents.agent.connection"}}</label>
+					<select id="connection_id" name="connection_id" class="ui dropdown" required>
+						{{range .Connections}}<option value="{{.ID}}" {{if eq .ID $.Agent.ConnectionID}}selected{{end}}>{{.Name}}</option>{{end}}
+					</select>
+				</div>
+				<div class="required field">
+					<label for="model">{{ctx.Locale.Tr "agents.agent.model"}}</label>
+					<input id="model" name="model" value="{{.Agent.Model}}" maxlength="255" required>
+				</div>
+				<div class="field">
+					<label for="description">{{ctx.Locale.Tr "agents.agent.description"}}</label>
+					<textarea id="description" name="description" rows="2" maxlength="2048">{{.Agent.Description}}</textarea>
+				</div>
+				<div class="field">
+					<label for="language">{{ctx.Locale.Tr "agents.agent.language"}}</label>
+					<input id="language" name="language" value="{{.Agent.Language}}" maxlength="32" placeholder="{{ctx.Locale.Tr "agents.agent.language_auto"}}">
+					<div class="help">{{ctx.Locale.Tr "agents.agent.language_help"}}</div>
+				</div>
+				<div class="required field">
+					<label>{{ctx.Locale.Tr "agents.agent.events"}}</label>
+					{{range .EventChoices}}
+					<div class="field">
+						<div class="ui checkbox">
+							<input id="event-{{.}}" type="checkbox" name="events" value="{{.}}" {{if index $.SelectedEvents .}}checked{{end}}>
+							<label for="event-{{.}}">{{ctx.Locale.Tr (printf "agents.event.%s" .)}}</label>
+						</div>
+					</div>
+					{{end}}
+				</div>
+				<div class="field">
+					<label for="access_mode">{{ctx.Locale.Tr "agents.agent.access"}}</label>
+					<select id="access_mode" name="access_mode" class="ui dropdown">
+						{{range .AccessModes}}<option value="{{.}}" {{if eq . $.Agent.AccessMode}}selected{{end}}>{{ctx.Locale.Tr (printf "agents.agent.access.%s" .)}}</option>{{end}}
+					</select>
+				</div>
+				{{if not .IsNew}}
+				<div class="field">
+					<a href="{{AppSubUrl}}/{{.Agent.Name}}/.agent">{{svg "octicon-repo"}} {{ctx.Locale.Tr "agents.agent.config_repo"}}</a>
+				</div>
+				{{end}}
+				<button class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+				<a class="ui button" href="{{AppSubUrl}}/-/admin/agents/list">{{ctx.Locale.Tr "cancel"}}</a>
+			</form>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}

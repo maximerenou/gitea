@@ -10,7 +10,7 @@ Every symbol below was read in this tree; file:line references are from that com
 | module `code.gitea.io/gitea` | `gitea.dev` | use `gitea.dev/...` |
 | `models/migrations` | `modelmigration/` (`migrations.go`, `newMigration(N, ...)`) | one migration file per milestone in `modelmigration/v29` (or new `v30`) |
 | eventsource | none. Live updates = WebSocket `/-/ws` over a pubsub broker (`routers/web/websocket/websocket.go`, `services/pubsub`); a client only subscribes to its own `UserTopic` | see §8 |
-| `system.GetSetting` | none. Typed DB settings = `config.NewOption[T]` (`modules/setting/config/value.go`), stored in `system_setting` | see §3 |
+| `system.GetSetting` | none. Typed DB settings = `config.NewOption[T]` (`modules/setting/config/value.go`), stored in `system_setting`; the option self-registers, so it lives in `modules/agents` with no hook | see §3 |
 | `ActionPerm` env / `IsActionsToken` ctx data | none. Credential state lives on the doer: `user_model.User.ExtDoerData` (`models/user/user_extdata.go`), forwarded to git hooks via `GITEA_PUSHER_EXT_DOER_DATA` | see §6 |
 
 ## 2. Package layout (all new)
@@ -26,7 +26,7 @@ templates/agents/  web_src/js/features/agents-*.ts
 agents/               docs, runner-helper (own go.mod), runner-image, examples, deploy, e2e
 ```
 
-## 3. Data model (milestone 1 migration; later milestones add columns/tables via their own migration)
+## 3. Data model (M1 migration 365 creates only `agent` and `agent_connection`; each later milestone adds its tables via its own migration)
 
 - `agent`: id, owner_id (0 = global), bot_user_id (unique), name (= bot username, ≤40), connection_id, model, description, language, action (immutable), events (JSON), settings (JSON, per action), access_mode + access_list (JSON), created/updated.
 - `agent_connection`: id, owner_id (0 = global), name, provider (anthropic|openai-compatible|ollama), base_url, token (encrypted with `modules/secret.EncryptSecret`, write-only), cli (backend name), access_mode (none|all|list) + access_list (JSON) for global ones.

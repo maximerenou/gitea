@@ -1,0 +1,50 @@
+{{template "admin/layout_head" (dict "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.connection"}}</h4>
+		<div class="ui attached segment">
+			<form class="ui form" action="{{.Link}}" method="post">
+				{{.CsrfTokenHtml}}
+				{{template "base/disable_form_autofill"}}
+				<div class="required field">
+					<label for="name">{{ctx.Locale.Tr "agents.connection.name"}}</label>
+					<input id="name" name="name" value="{{.Connection.Name}}" maxlength="255" required autofocus>
+				</div>
+				<div class="required field">
+					<label for="provider">{{ctx.Locale.Tr "agents.connection.provider"}}</label>
+					<select id="provider" name="provider" class="ui dropdown">
+						{{range .Providers}}<option value="{{.}}" {{if eq . $.Connection.Provider}}selected{{end}}>{{.}}</option>{{end}}
+					</select>
+				</div>
+				<div class="required field">
+					<label for="base_url">{{ctx.Locale.Tr "agents.connection.base_url"}}</label>
+					<input id="base_url" name="base_url" type="url" value="{{.Connection.BaseURL}}" required>
+				</div>
+				<div class="field">
+					<label for="token">{{ctx.Locale.Tr "agents.connection.token"}}</label>
+					<input id="token" name="token" type="password" autocomplete="new-password" placeholder="{{if .Connection.HasToken}}{{ctx.Locale.Tr "agents.connection.token_unchanged"}}{{end}}">
+					<div class="help">{{ctx.Locale.Tr "agents.connection.token_help"}}</div>
+					{{if .Connection.HasToken}}
+					<div class="ui checkbox tw-mt-2">
+						<input id="clear_token" type="checkbox" name="clear_token">
+						<label for="clear_token">{{ctx.Locale.Tr "agents.connection.token_clear"}}</label>
+					</div>
+					{{end}}
+				</div>
+				<div class="required field">
+					<label for="cli">{{ctx.Locale.Tr "agents.connection.cli"}}</label>
+					<select id="cli" name="cli" class="ui dropdown">
+						{{range .CLIs}}<option value="{{.}}" {{if eq . $.Connection.CLI}}selected{{end}}>{{.}}</option>{{end}}
+					</select>
+				</div>
+				<div class="field">
+					<label for="access_mode">{{ctx.Locale.Tr "agents.connection.access"}}</label>
+					<select id="access_mode" name="access_mode" class="ui dropdown">
+						{{range .AccessModes}}<option value="{{.}}" {{if eq . $.Connection.AccessMode}}selected{{end}}>{{ctx.Locale.Tr (printf "agents.connection.access.%s" .)}}</option>{{end}}
+					</select>
+				</div>
+				<button class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+				<a class="ui button" href="{{AppSubUrl}}/-/admin/agents/connections">{{ctx.Locale.Tr "cancel"}}</a>
+			</form>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}

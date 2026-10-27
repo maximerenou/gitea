@@ -1,0 +1,80 @@
+{{template "admin/layout_head" (dict "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.general"}}</h4>
+		<div class="ui attached segment">
+			<form class="ui form" action="{{AppSubUrl}}/-/admin/agents" method="post">
+				{{.CsrfTokenHtml}}
+				<div class="field">
+					<div class="ui checkbox">
+						<input id="enabled" type="checkbox" name="enabled" {{if .Settings.Enabled}}checked{{end}}>
+						<label for="enabled">{{ctx.Locale.Tr "agents.settings.enabled"}}</label>
+						<div class="help">{{ctx.Locale.Tr "agents.settings.enabled_help"}}</div>
+					</div>
+				</div>
+				<div class="field">
+					<label for="runner_label">{{ctx.Locale.Tr "agents.settings.runner_label"}}</label>
+					<input id="runner_label" name="runner_label" value="{{.Settings.RunnerLabel}}" required>
+				</div>
+				<div class="field">
+					<label for="job_image">{{ctx.Locale.Tr "agents.settings.job_image"}}</label>
+					<input id="job_image" name="job_image" value="{{.Settings.JobImage}}" required>
+				</div>
+				<div class="field">
+					<label for="checkout_action">{{ctx.Locale.Tr "agents.settings.checkout_action"}}</label>
+					<input id="checkout_action" name="checkout_action" value="{{.Settings.CheckoutAction}}" required>
+				</div>
+				<div class="two fields">
+					<div class="field">
+						<label for="runs_per_issue_per_hour">{{ctx.Locale.Tr "agents.settings.runs_per_issue_per_hour"}}</label>
+						<input id="runs_per_issue_per_hour" name="runs_per_issue_per_hour" type="number" min="1" max="1000" value="{{.Settings.RunsPerIssuePerHour}}" required>
+					</div>
+					<div class="field">
+						<label for="max_agent_round_trips">{{ctx.Locale.Tr "agents.settings.max_agent_round_trips"}}</label>
+						<input id="max_agent_round_trips" name="max_agent_round_trips" type="number" min="1" max="50" value="{{.Settings.MaxAgentRoundTrips}}" required>
+					</div>
+				</div>
+				<div class="two fields">
+					<div class="field">
+						<label for="auto_retries">{{ctx.Locale.Tr "agents.settings.auto_retries"}}</label>
+						<input id="auto_retries" name="auto_retries" type="number" min="0" max="20" value="{{.Settings.AutoRetries}}" required>
+					</div>
+					<div class="field">
+						<label for="failure_memory_hours">{{ctx.Locale.Tr "agents.settings.failure_memory_hours"}}</label>
+						<input id="failure_memory_hours" name="failure_memory_hours" type="number" min="1" max="168" value="{{.Settings.FailureMemoryHours}}" required>
+					</div>
+				</div>
+				<div class="two fields">
+					<div class="field">
+						<label for="queue_ttl_hours">{{ctx.Locale.Tr "agents.settings.queue_ttl_hours"}}</label>
+						<input id="queue_ttl_hours" name="queue_ttl_hours" type="number" min="1" max="168" value="{{.Settings.QueueTTLHours}}" required>
+					</div>
+					<div class="field">
+						<label for="ci_repairs_per_commit">{{ctx.Locale.Tr "agents.settings.ci_repairs_per_commit"}}</label>
+						<input id="ci_repairs_per_commit" name="ci_repairs_per_commit" type="number" min="1" max="20" value="{{.Settings.CIRepairsPerCommit}}" required>
+					</div>
+				</div>
+				<div class="two fields">
+					<div class="field">
+						<label for="blocked_reminder_hours">{{ctx.Locale.Tr "agents.settings.blocked_reminder_hours"}}</label>
+						<input id="blocked_reminder_hours" name="blocked_reminder_hours" type="number" min="24" max="720" value="{{.Settings.BlockedReminderHours}}" required>
+					</div>
+					<div class="field">
+						<label for="blocked_expiry_hours">{{ctx.Locale.Tr "agents.settings.blocked_expiry_hours"}}</label>
+						<input id="blocked_expiry_hours" name="blocked_expiry_hours" type="number" min="0" max="8760" value="{{.Settings.BlockedExpiryHours}}" required>
+						<div class="help">{{ctx.Locale.Tr "agents.settings.blocked_expiry_hours_help"}}</div>
+					</div>
+				</div>
+				<div class="field">
+					<label for="helper_download_url">{{ctx.Locale.Tr "agents.settings.helper_download_url"}}</label>
+					<input id="helper_download_url" name="helper_download_url" type="url" value="{{.Settings.HelperDownloadURL}}">
+				</div>
+				<div class="field">
+					<label for="helper_sha256">{{ctx.Locale.Tr "agents.settings.helper_sha256"}}</label>
+					<textarea id="helper_sha256" name="helper_sha256" rows="3" placeholder="linux-amd64=…">{{.HelperSHA256}}</textarea>
+					<div class="help">{{ctx.Locale.Tr "agents.settings.helper_sha256_help"}}</div>
+				</div>
+				<button class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+			</form>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}

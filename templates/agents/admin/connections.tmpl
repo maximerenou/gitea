@@ -1,0 +1,29 @@
+{{template "admin/layout_head" (dict "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">
+			{{ctx.Locale.Tr "agents.connections"}}
+			<div class="ui right">
+				<a class="ui primary tiny button" href="{{AppSubUrl}}/-/admin/agents/connections/new">{{ctx.Locale.Tr "agents.connection_new"}}</a>
+			</div>
+		</h4>
+		<div class="ui attached segment">
+			<div>{{ctx.Locale.Tr "agents.connections_desc"}}</div>
+			{{if .Connections}}<div class="divider"></div>{{end}}
+			<div class="flex-divided-list">
+				{{range .Connections}}
+					<div class="item flex-text-block">
+						<div class="gt-ellipsis tw-flex-1">
+							<a href="{{AppSubUrl}}/-/admin/agents/connections/{{.ID}}">{{.Name}}</a>
+							<span class="tw-ml-2 tw-text-grey-light">{{.Provider}} · {{.BaseURL}}</span>
+						</div>
+						<a class="muted" href="{{AppSubUrl}}/-/admin/agents/connections/{{.ID}}">{{svg "octicon-pencil"}}</a>
+						<a class="tw-text-red tw-pr-2 link-action negative"
+							data-url="{{AppSubUrl}}/-/admin/agents/connections/{{.ID}}/delete"
+							data-modal-confirm="{{ctx.Locale.Tr "agents.connection_delete_desc"}}"
+						>{{svg "octicon-trash"}}</a>
+					</div>
+				{{end}}
+			</div>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}

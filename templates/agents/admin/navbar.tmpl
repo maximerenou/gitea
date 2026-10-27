@@ -1,0 +1,16 @@
+<details class="item" {{if .PageIsAdminAgents}}open{{end}}>
+	<summary>{{ctx.Locale.Tr "agents.title"}}</summary>
+	<div class="menu">
+		<a class="{{if .PageIsAdminAgentsGeneral}}active {{end}}item" href="{{AppSubUrl}}/-/admin/agents">
+			{{ctx.Locale.Tr "agents.general"}}
+		</a>
+		{{if .AgentsEnabled}}
+		<a class="{{if .PageIsAdminAgentsConnections}}active {{end}}item" href="{{AppSubUrl}}/-/admin/agents/connections">
+			{{ctx.Locale.Tr "agents.connections"}}
+		</a>
+		<a class="{{if .PageIsAdminAgentsList}}active {{end}}item" href="{{AppSubUrl}}/-/admin/agents/list">
+			{{ctx.Locale.Tr "agents.agents"}}
+		</a>
+		{{end}}
+	</div>
+</details>

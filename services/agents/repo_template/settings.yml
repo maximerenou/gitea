@@ -1,0 +1,5 @@
+version: v1
+# Skills (directories under skills/) and MCP servers (names in mcp.json) enabled for this agent.
+# An empty "mcp" list enables every declared server.
+skills: []
+mcp: []

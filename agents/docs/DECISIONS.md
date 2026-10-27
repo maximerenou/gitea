@@ -1,6 +1,6 @@
 # Decisions
 
-Status: **proposed** until validated by the maintainer.
+Status: validated by the maintainer on milestone 0 (D3, D4, D6, D11 settled below).
 
 ## D1 — How runs are created (decided, no user input needed)
 Call `actions_service.PrepareRunAndInsert` directly with generated YAML (see DESIGN §5). No file written in the target repo, no change in existing files, rerun works (payload stored per job).
@@ -10,14 +10,15 @@ Risk: upstream could change `PrepareRunAndInsert`'s signature; the call site is 
 ## D2 — Built-in `gitea` MCP server: stdio first
 Milestone 5 ships `gitea-mcp` (stdio) in the job image with the session token. An HTTP MCP served by Gitea is deferred (needs its own authorization surface). Read-only tools only, authorized by the same session-token intersection as everything else.
 
-## D3 — Default agent CLI backend: **needs your decision**
+## D3 — Default agent CLI backend: **Codex CLI** (decided)
+Local models: Codex itself against an Ollama/OpenAI-compatible endpoint; a second backend (opencode) is optional and only added if Codex+Ollama proves insufficient in the M3 spike.
 Constraint: open source, MCP support, non-interactive JSON event stream, resumable conversation, works with a local model.
 - Option A (recommended): **Codex CLI** default (Apache-2.0; `exec` mode with JSON events, MCP stdio, resume, OpenAI-compatible and Ollama endpoints) + **opencode** as the local-model backend.
 - Option B: **OpenHands** default (heavier, container-in-container) + Aider (no native MCP).
 I have not been able to verify CLI flags offline; M3 starts with a spike that records the exact invocation per backend in `modules/agents` tests. Claude Code is not open source, so it is not the default; it can be added as a third backend behind the same interface.
 
-## D4 — Locale files
-User request: ship `en-US` and `fr-FR`. This overrides AGENTS.md ("only edit en-US"). Risk: Crowdin syncs `fr-FR` from `en-US` (`crowdin.yml`) and may overwrite hand-written French keys with the Crowdin state (untranslated keys are skipped).
+## D4 — Locale files: **en-US only** (decided, follows AGENTS.md; fr-FR comes from Crowdin)
+Previous analysis kept for the record. Risk: Crowdin syncs `fr-FR` from `en-US` (`crowdin.yml`) and may overwrite hand-written French keys with the Crowdin state (untranslated keys are skipped).
 - Option A (recommended): write both files; keep the agents keys under a unique prefix (`agents.*`, `admin.agents.*`) so a rebase conflict is confined to one block, and re-run `make` locale checks after each upstream sync.
 - Option B: en-US only, French delivered by Crowdin after upstream acceptance (not possible for a fork).
 
@@ -40,4 +41,17 @@ Base version = `main` @ 9e27bce (2026-10-26, no release tag in the clone). Runne
 AGENTS.md (`Assisted-by:`, no `Co-Authored-By`) takes precedence over the generic session attribution.
 
 ## D11 — `agents/PROMPT.md`
-Not created in M0: the prompt only exists in the chat; please add it verbatim to avoid me altering it.
+Not created (maintainer: not needed).
+
+## D12 — `.agent` repository template lives in `services/agents/repo_template/`
+`go:embed` cannot reach `agents/examples/`, and nothing under `agents/` may be imported by Gitea. The embedded copy is the single source; `agents/examples/` only holds the target-repo example (added with milestone 5).
+
+## D13 — Milestone 1 scope cuts (to finish properly in later milestones)
+- Model list from the provider (5 min / 30 s cache): manual model entry only until M6.
+- Connection sharing "list" mode and agent access "list" mode: only None/All and Writers/Owner are offered until the user/group picker exists (M6). The columns already exist.
+- Event checkboxes are not filtered by action on the *create* form (no JS yet); the server refuses invalid pairs. The edit form is filtered. JS filtering lands with M6.
+- Per-action settings, avatar upload and the Access / Secrets buttons: M4–M6.
+- Bot personal/OAuth token refusal (D6) is M2.
+
+## D14 — Test environment limitation
+Gitea's test harness refuses to run as root, and this sandbox runs as root with the Go caches under `/root` (mode 700). DB-backed tests (`models/agents`, `tests/integration/agents_admin_test.go`) compile (`go vet`) but were **not executed** here. `golangci-lint` (`make fmt` / `lint-go`) also fails to start in this sandbox (pinned v2.15.0 vs Go 1.27.3 toolchain mismatch). `gofmt` and `go vet` are clean.

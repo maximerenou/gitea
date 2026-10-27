@@ -101,6 +101,8 @@
 				</a>
 			</div>
 		</details>
+		{{/* AGENTS-HOOK: agents entries */}}
+		{{template "agents/admin/navbar" .}}
 		<a class="{{if .PageIsAdminNotices}}active {{end}}item" href="{{AppSubUrl}}/-/admin/notices">
 			{{ctx.Locale.Tr "admin.notices"}}
 		</a>

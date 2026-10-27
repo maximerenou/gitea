@@ -1,0 +1,42 @@
+{{template "admin/layout_head" (dict "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">
+			{{ctx.Locale.Tr "agents.agents"}}
+			<div class="ui right">
+				<a class="ui primary tiny button" href="{{AppSubUrl}}/-/admin/agents/list/new">{{ctx.Locale.Tr "agents.agent_new"}}</a>
+			</div>
+		</h4>
+		<div class="ui attached table segment">
+			<table class="ui very basic striped table unstackable">
+				<thead>
+					<tr>
+						<th>{{ctx.Locale.Tr "agents.agent.name"}}</th>
+						<th>{{ctx.Locale.Tr "agents.agent.role"}}</th>
+						<th>{{ctx.Locale.Tr "agents.agent.model"}}</th>
+						<th>{{ctx.Locale.Tr "agents.agent.language"}}</th>
+						<th>{{ctx.Locale.Tr "agents.agent.scope"}}</th>
+						<th></th>
+					</tr>
+				</thead>
+				<tbody>
+					{{range .Agents}}
+					<tr>
+						<td><a href="{{AppSubUrl}}/-/admin/agents/list/{{.ID}}">{{.Name}}</a></td>
+						<td><span class="ui basic label">{{.Role}}</span></td>
+						<td>{{.Model}} <span class="tw-text-grey-light">({{.ConnectionName}})</span></td>
+						<td>{{if .Language}}{{.Language}}{{else}}{{ctx.Locale.Tr "agents.agent.language_auto"}}{{end}}</td>
+						<td>{{ctx.Locale.Tr "agents.scope.global"}}</td>
+						<td class="tw-text-right">
+							<a class="muted" href="{{AppSubUrl}}/-/admin/agents/list/{{.ID}}">{{svg "octicon-pencil"}}</a>
+							<a class="tw-text-red tw-pl-2 link-action negative"
+								data-url="{{AppSubUrl}}/-/admin/agents/list/{{.ID}}/delete"
+								data-modal-confirm="{{ctx.Locale.Tr "agents.agent_delete_desc"}}"
+							>{{svg "octicon-trash"}}</a>
+						</td>
+					</tr>
+					{{end}}
+				</tbody>
+			</table>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}
