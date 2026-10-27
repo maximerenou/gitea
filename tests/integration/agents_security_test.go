@@ -7,8 +7,6 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
-	"os"
-	"path/filepath"
 	"testing"
 
 	actions_model "gitea.dev/models/actions"
@@ -82,19 +80,25 @@ func TestAgentSessionTokenAPI(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, _ *url.URL) { // the git hooks of the agent repository need the internal server
 		f := newAgentFixture(t)
 		issueURL := "/api/v1/repos/user2/repo1/issues"
+		repoURL := "/api/v1/repos/user2/repo1"
 		newIssue := &api.CreateIssueOption{Title: "from an agent", Body: "body"}
+
+		// creating a label needs write access, unlike opening an issue which any reader may do on a public repository
+		label := &api.CreateLabelOption{Name: "from-agent", Color: "#00aabb"}
+		labelURL := "/api/v1/repos/user2/repo1/labels"
 
 		t.Run("TriggerCanWrite", func(t *testing.T) {
 			token := f.token(t, 2, 1)
-			resp := MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(token), http.StatusOK)
-			assert.Equal(t, f.bot.Name, DecodeJSON(t, resp, &api.User{}).UserName)
-			MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusCreated)
+			MakeRequest(t, NewRequest(t, "GET", repoURL).AddTokenAuth(token), http.StatusOK)
+			resp := MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusCreated)
+			assert.Equal(t, f.bot.Name, DecodeJSON(t, resp, &api.Issue{}).Poster.UserName) // it acts as the bot
+			MakeRequest(t, NewRequestWithJSON(t, "POST", labelURL, label).AddTokenAuth(token), http.StatusCreated)
 		})
 
 		t.Run("TriggerCannotWriteSoSessionCannot", func(t *testing.T) {
 			token := f.token(t, 5, 2) // user5 only reads the public repository, although the bot has write access
-			MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo1").AddTokenAuth(token), http.StatusOK)
-			MakeRequest(t, NewRequestWithJSON(t, "POST", issueURL, newIssue).AddTokenAuth(token), http.StatusForbidden)
+			MakeRequest(t, NewRequest(t, "GET", repoURL).AddTokenAuth(token), http.StatusOK)
+			MakeRequest(t, NewRequestWithJSON(t, "POST", labelURL, &api.CreateLabelOption{Name: "denied", Color: "#00aabb"}).AddTokenAuth(token), http.StatusForbidden)
 			// the private repository is invisible to the person, so it is to the session
 			MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo2").AddTokenAuth(token), http.StatusNotFound)
 		})
@@ -129,7 +133,7 @@ func TestAgentSessionTokenLifetime(t *testing.T) {
 	onGiteaRun(t, func(t *testing.T, _ *url.URL) { // the git hooks of the agent repository need the internal server
 		f := newAgentFixture(t)
 		check := func(token string, status int) {
-			MakeRequest(t, NewRequest(t, "GET", "/api/v1/user").AddTokenAuth(token), status)
+			MakeRequest(t, NewRequest(t, "GET", "/api/v1/repos/user2/repo1").AddTokenAuth(token), status)
 		}
 
 		t.Run("RefusedOnceTheRunEnded", func(t *testing.T) {
@@ -195,8 +199,9 @@ func TestAgentSessionTokenGitPush(t *testing.T) {
 			return &cu
 		}
 		commit := func(dir, file string) {
-			require.NoError(t, os.WriteFile(filepath.Join(dir, file), []byte(file), 0o644))
-			doGitCheckoutWriteFileCommit(localGitAddCommitOptions{LocalRepoPath: dir, CheckoutBranch: "-B " + sessionBranch, TreeFilePath: file, TreeFileContent: file})(t)
+			_, _, err := gitcmd.NewCommand("checkout", "-B").AddDynamicArguments(sessionBranch).WithDir(dir).RunStdString(t.Context())
+			require.NoError(t, err)
+			doGitCheckoutWriteFileCommit(localGitAddCommitOptions{LocalRepoPath: dir, CheckoutBranch: sessionBranch, TreeFilePath: file, TreeFileContent: file})(t)
 		}
 
 		token := f.token(t, 2, sessionID)
