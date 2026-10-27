@@ -102,6 +102,10 @@ func HookPreReceive(ctx *gitea_context.PrivateContext) {
 		newCommitID := opts.NewCommitIDs[i]
 		refFullName := opts.RefFullNames[i]
 
+		if !ourCtx.assertAgentSessionRef(oldCommitID, newCommitID, refFullName) { // AGENTS-HOOK: agent session branch rule
+			return
+		}
+
 		switch {
 		case refFullName.IsBranch():
 			preReceiveBranch(ourCtx, oldCommitID, newCommitID, refFullName)

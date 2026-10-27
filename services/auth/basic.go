@@ -96,6 +96,9 @@ func (b *Basic) VerifyAuthToken(req *http.Request, w http.ResponseWriter, store 
 			log.Error("GetUserByID:  %v", err)
 			return nil, err
 		}
+		if err := rejectAgentBotToken(req.Context(), u); err != nil { // AGENTS-HOOK: agent bots only use session tokens
+			return nil, err
+		}
 
 		token.UpdatedUnix = timeutil.TimeStampNow()
 		if err = auth_model.UpdateAccessToken(req.Context(), token); err != nil {

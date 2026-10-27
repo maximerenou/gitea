@@ -128,6 +128,10 @@ func newWebAuthMiddleware() *AuthMiddleware {
 
 		group := auth_service.NewGroup()
 
+		if allowOAuth2 || allowBasic || allowDeployToken {
+			group.Add(&auth_service.SessionToken{}) // AGENTS-HOOK: agent run tokens, ignored unless the token carries the session prefix
+		}
+
 		// Most auth methods should ignore the user id stored in the session.
 		// If the auth succeeds, it must use the user id from the auth method to make sure the new login succeeds.
 		if allowOAuth2 {

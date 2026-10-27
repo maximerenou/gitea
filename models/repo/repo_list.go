@@ -775,6 +775,10 @@ func DoerTokenRepoCond(doer *user_model.User) builder.Cond {
 	if user_model.IsPublicOnlyDoer(doer) {
 		return PublicRepoUnderPublicOwnerCond()
 	}
+	if _, triggerUserID, ok := user_model.GetDoerSessionToken(doer); ok { // AGENTS-HOOK: an agent session only sees repositories its triggering user can see too
+		// restricted is the safe side: the list can be narrower than what the user sees, never wider
+		return AccessibleRepositoryCondition(&user_model.User{ID: triggerUserID, IsRestricted: true}, unit.TypeInvalid)
+	}
 	return builder.NewCond()
 }
 

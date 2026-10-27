@@ -422,6 +422,10 @@ func reqAnyRepoReader() func(ctx *context.APIContext) {
 // reqOrgOwnership user should be an organization owner, or a site admin
 func reqOrgOwnership() func(ctx *context.APIContext) {
 	return func(ctx *context.APIContext) {
+		if _, _, ok := user_model.GetDoerSessionToken(ctx.Doer); ok { // AGENTS-HOOK: an agent session never acts as an organization owner or member
+			ctx.APIError(http.StatusForbidden, "agent sessions cannot use organization routes")
+			return
+		}
 		if rejectPublicOnly()(ctx); ctx.Written() { // org ownership reaches the org's private repos (hooks, teams, secrets)
 			return
 		}
@@ -549,6 +553,10 @@ func reqTeamMembership() func(ctx *context.APIContext) {
 // reqOrgMembership user should be an organization member, or a site admin
 func reqOrgMembership() func(ctx *context.APIContext) {
 	return func(ctx *context.APIContext) {
+		if _, _, ok := user_model.GetDoerSessionToken(ctx.Doer); ok { // AGENTS-HOOK: an agent session never acts as an organization owner or member
+			ctx.APIError(http.StatusForbidden, "agent sessions cannot use organization routes")
+			return
+		}
 		if ctx.IsUserSiteAdmin() {
 			return
 		}
@@ -848,6 +856,7 @@ func bind[T any](tmpl T) any {
 
 func buildAuthGroup() *auth.Group {
 	group := auth.NewGroup(
+		&auth.SessionToken{}, // AGENTS-HOOK: agent run tokens, ignored unless the token carries the session prefix
 		&auth.OAuth2{},
 		&auth.HTTPSign{},
 		&auth.Basic{}, // FIXME: this should be removed once we don't allow basic auth in API

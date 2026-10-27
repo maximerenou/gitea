@@ -411,6 +411,9 @@ func getDeployKeyRepoPermission(ctx context.Context, repo *repo_model.Repository
 // GetDoerRepoPermission returns the repository permission for the current actor,
 // dispatching to the credential-scoped permissions when the actor is a token or key user.
 func GetDoerRepoPermission(ctx context.Context, repo *repo_model.Repository, user *user_model.User) (Permission, error) {
+	if _, triggerUserID, ok := user_model.GetDoerSessionToken(user); ok { // AGENTS-HOOK: agent session permissions
+		return getAgentSessionRepoPermission(ctx, repo, user, triggerUserID)
+	}
 	if taskID, ok := user_model.GetActionsUserTaskID(user); ok {
 		return GetActionsUserRepoPermission(ctx, repo, user, taskID)
 	}

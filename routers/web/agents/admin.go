@@ -44,7 +44,7 @@ func AdminContext(ctx *context.Context) {
 
 // RegisterAdminRoutes adds the site administration pages; "General" stays reachable while disabled so it can be enabled.
 func RegisterAdminRoutes(m *web.Router) {
-	m.Group(adminLink, func() {
+	m.Group("/agents", func() { // relative to the "/-/admin" group
 		m.Get("", General)
 		m.Post("", web.Bind[*SettingsForm](), GeneralPost)
 
@@ -109,6 +109,7 @@ func GeneralPost(ctx *context.Context) {
 		ctx.HTML(http.StatusUnprocessableEntity, tplGeneral)
 		return
 	}
+	wasEnabled := agents.IsEnabled(ctx)
 	value, err := json.Marshal(s)
 	if err != nil {
 		ctx.ServerError("Marshal", err)
@@ -119,6 +120,12 @@ func GeneralPost(ctx *context.Context) {
 		return
 	}
 	config.GetDynGetter().InvalidateCache()
+	if wasEnabled && !s.Enabled {
+		if err := agents_model.RevokeAllSessionTokens(ctx); err != nil {
+			ctx.ServerError("RevokeAllSessionTokens", err)
+			return
+		}
+	}
 	ctx.Flash.Success(ctx.Tr("agents.settings_saved"))
 	ctx.Redirect(setting.AppSubURL + adminLink)
 }

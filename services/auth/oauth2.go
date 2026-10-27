@@ -146,6 +146,9 @@ func (o *OAuth2) userFromToken(ctx context.Context, tokenSHA string) (*user_mode
 	if err != nil {
 		return nil, err
 	}
+	if err := rejectAgentBotToken(ctx, user); err != nil { // AGENTS-HOOK: agent bots only use session tokens
+		return nil, err
+	}
 	user.ExtDoerData = user_model.NewTokenExtDoerData(user_model.CredentialAccessToken, t.ID, t.Scope)
 	return user, nil
 }

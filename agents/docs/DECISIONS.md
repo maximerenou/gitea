@@ -55,3 +55,11 @@ Not created (maintainer: not needed).
 
 ## D14 — Test environment limitation
 Gitea's test harness refuses to run as root, and this sandbox runs as root with the Go caches under `/root` (mode 700). DB-backed tests (`models/agents`, `tests/integration/agents_admin_test.go`) compile (`go vet`) but were **not executed** here. `golangci-lint` (`make fmt` / `lint-go`) also fails to start in this sandbox (pinned v2.15.0 vs Go 1.27.3 toolchain mismatch). `gofmt` and `go vet` are clean.
+
+## D15 — Session token details (milestone 2)
+- Stored as SHA-256 of a 160-bit random token (prefix `gsess_`), not PBKDF2: the token has full entropy, and a slow hash plus a cache would either cost every request or bypass revocation. Nothing is cached; revocation, expiry, run status, bot and triggering user are re-checked on every request.
+- A token is valid only while its Actions run is not done; also revoked when the run ends (`RevokeSessionTokensOfRun`, wired in M3), when agents are switched off (done in the admin handler) and after at most 24 h.
+- The scope can never exceed `write:repository,write:issue,write:package`; public-only is refused.
+- Repository search/list: the triggering user is treated as *restricted* when building the visibility condition (no user object is available there). The list can be narrower than what an unrestricted user sees (public repos of private orgs reachable only through org membership are hidden), never wider.
+- "Direct commit" push mode (spec) is not available yet: the session record that configures it arrives in M4, until then the branch rule is strict.
+- A session cannot merge pull requests: merging pushes to a branch outside `agent/<session>/`. The result-application service (M3/M4) acts as the bot itself, with no token.
