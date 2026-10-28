@@ -6,12 +6,16 @@ package agents
 import (
 	"bytes"
 	_ "embed"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 
 	"gitea.dev/modules/json"
 )
+
+// ErrInvalidResult marks a result.json the agent got wrong, as opposed to a failure on the server side.
+var ErrInvalidResult = errors.New("invalid agent result")
 
 // ResultVersion is the only result.json version accepted.
 const ResultVersion = "v1"

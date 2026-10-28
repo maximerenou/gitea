@@ -86,6 +86,7 @@ import (
 	"gitea.dev/modules/web/middleware"
 	"gitea.dev/routers/api/v1/activitypub"
 	"gitea.dev/routers/api/v1/admin"
+	agents_api "gitea.dev/routers/api/v1/agents"
 	"gitea.dev/routers/api/v1/misc"
 	"gitea.dev/routers/api/v1/notify"
 	"gitea.dev/routers/api/v1/org"
@@ -1874,6 +1875,8 @@ func Routes() *web.Router {
 				m.Get("/jobs", admin.ListWorkflowJobs)
 			})
 		}, tokenRequiresScopes(auth_model.AccessTokenScopeCategoryAdmin), reqToken(), reqSiteAdmin(), rejectPublicOnly())
+
+		agents_api.RegisterRoutes(m) // AGENTS-HOOK: runner API of the agents feature
 
 		m.Group("/topics", func() {
 			m.Get("/search", repo.TopicSearch)

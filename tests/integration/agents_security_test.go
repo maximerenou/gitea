@@ -52,6 +52,7 @@ func newAgentFixture(t *testing.T) *agentSessionFixture {
 	ctx := t.Context()
 	setAgentsEnabled(t, true)
 	conn := &agents_model.Connection{Name: "sec-conn", Provider: agents_model.ProviderOllama, BaseURL: "http://ollama:11434", CLI: agents_model.CLICodex}
+	require.NoError(t, conn.SetToken("model-provider-secret"))
 	require.NoError(t, agents_model.CreateConnection(ctx, conn))
 	agent, err := agents_service.CreateAgent(ctx, agents_service.CreateAgentOptions{
 		Name: "sec-bot", ConnectionID: conn.ID, Model: "m", Action: agents.ActionReview, Events: []agents.Event{agents.EventAll},

@@ -32,7 +32,7 @@ func SubmitResult(ctx context.Context, run *agents_model.Run, raw []byte) ([]str
 		if _, finishErr := agents_model.FinishRun(ctx, run.ID, agents_model.RunFailed, "", "invalid result: "+err.Error(), "", ""); finishErr != nil {
 			return nil, finishErr
 		}
-		return nil, err
+		return nil, fmt.Errorf("%w: %w", agents.ErrInvalidResult, err)
 	}
 	if claimed, err := agents_model.ClaimRunResult(ctx, run.ID); err != nil {
 		return nil, fmt.Errorf("SubmitResult: %w", err)
@@ -154,8 +154,21 @@ func submitReview(ctx context.Context, bot *user_model.User, issue *issues_model
 		}
 	}
 
+	// Gitea accepts a code comment on any path, so only keep the ones on files the pull request changes
+	var changed map[string]bool
+	if files, err := gitRepo.GetFilesChangedBetween(ctx, pr.MergeBase, commitID); err == nil && pr.MergeBase != "" {
+		changed = make(map[string]bool, len(files))
+		for _, f := range files {
+			changed[f] = true
+		}
+	}
+
 	posted := 0
 	for i, c := range rv.Comments {
+		if changed != nil && !changed[c.Path] {
+			notes = append(notes, fmt.Sprintf("review comment %d (%s:%d) was not posted: the file is not part of the pull request", i+1, c.Path, c.Line))
+			continue
+		}
 		if _, err := pull_service.CreateCodeComment(ctx, bot, gitRepo, issue, c.Line, c.Body, c.Path, true, 0, commitID, nil); err != nil {
 			notes = append(notes, fmt.Sprintf("review comment %d (%s:%d) was not posted: %v", i+1, c.Path, c.Line, err))
 			continue

@@ -226,6 +226,12 @@ type swaggerParameterBodies struct {
 	CreateVariableOption api.CreateVariableOption
 
 	// in:body
+	AgentRunProgressOption api.AgentRunProgressOption
+
+	// in:body
+	AgentRunResultOption api.AgentRunResultOption
+
+	// in:body
 	RenameOrgOption api.RenameOrgOption
 
 	// in:body
