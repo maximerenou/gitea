@@ -81,7 +81,16 @@ func (s *Settings) Validate() error {
 	if strings.TrimSpace(s.RunnerLabel) == "" || strings.TrimSpace(s.CheckoutAction) == "" || strings.TrimSpace(s.JobImage) == "" {
 		return fmt.Errorf("runner label, checkout action and job image must not be empty")
 	}
+	if !safeForWorkflow(s.RunnerLabel) || !safeForWorkflow(s.CheckoutAction) || !safeForWorkflow(s.JobImage) {
+		return fmt.Errorf("runner label, checkout action and job image must be a single line without ${{ }} expressions")
+	}
 	return nil
+}
+
+// safeForWorkflow guards the values written into the generated workflow: the runner evaluates ${{ }} expressions
+// in them, and a line break could not be part of a single scalar.
+func safeForWorkflow(v string) bool {
+	return !strings.ContainsAny(v, "\r\n") && !strings.Contains(v, "${{") && !strings.Contains(v, "\x00")
 }
 
 // Clamp forces every value into its bounds so a hand-edited database value cannot disable a guardrail.
@@ -94,13 +103,13 @@ func (s *Settings) Clamp() {
 			*b.value = min(max(*b.value, b.min), b.max)
 		}
 	}
-	if strings.TrimSpace(s.RunnerLabel) == "" {
+	if strings.TrimSpace(s.RunnerLabel) == "" || !safeForWorkflow(s.RunnerLabel) {
 		s.RunnerLabel = def.RunnerLabel
 	}
-	if strings.TrimSpace(s.CheckoutAction) == "" {
+	if strings.TrimSpace(s.CheckoutAction) == "" || !safeForWorkflow(s.CheckoutAction) {
 		s.CheckoutAction = def.CheckoutAction
 	}
-	if strings.TrimSpace(s.JobImage) == "" {
+	if strings.TrimSpace(s.JobImage) == "" || !safeForWorkflow(s.JobImage) {
 		s.JobImage = def.JobImage
 	}
 }

@@ -441,8 +441,9 @@ func prepareMigrationTasks() []*migration {
 		newMigration(362, "Add reusable_workflow_ref column to action_run_job", v29.AddReusableWorkflowRefToActionRunJob),
 		newMigration(363, "Add release_id to reaction table", v29.AddReleaseIDToReaction),
 		newMigration(364, "Add new table project_workflow", v29.AddProjectWorkflow),
-		newMigration(365, "Add agent and agent connection tables", v29.AddAgentTables), // AGENTS-HOOK: agents schema
-		newMigration(366, "Add agent session token table", v29.AddAgentSessionToken),   // AGENTS-HOOK: agents schema
+		newMigration(365, "Add agent and agent connection tables", v29.AddAgentTables),   // AGENTS-HOOK: agents schema
+		newMigration(366, "Add agent session token table", v29.AddAgentSessionToken),     // AGENTS-HOOK: agents schema
+		newMigration(367, "Add agent session and run tables", v29.AddAgentSessionAndRun), // AGENTS-HOOK: agents schema
 	}
 	return preparedMigrations
 }

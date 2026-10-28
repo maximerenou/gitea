@@ -42,6 +42,17 @@ func TestSettingsBounds(t *testing.T) {
 	s.Clamp()
 	assert.Equal(t, 24, s.BlockedExpiryHours)
 
+	// values that reach the generated workflow can neither carry expressions nor span lines
+	for _, bad := range []string{"${{ secrets.AGENT_SESSION_TOKEN }}", "a\nb", "a\rb", "ubuntu-latest\n  steps: []"} {
+		s = DefaultSettings()
+		s.RunnerLabel, s.CheckoutAction, s.JobImage = bad, bad, bad
+		assert.Error(t, s.Validate(), bad)
+		s.Clamp()
+		assert.NoError(t, s.Validate(), bad)
+		assert.Equal(t, def.RunnerLabel, s.RunnerLabel)
+		assert.Equal(t, def.JobImage, s.JobImage)
+	}
+
 	s = DefaultSettings()
 	s.RunnerLabel = " "
 	assert.Error(t, s.Validate())
