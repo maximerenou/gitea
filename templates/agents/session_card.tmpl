@@ -1,0 +1,29 @@
+{{range .AgentSessionCards}}
+	<div class="timeline-item event agent-session-card">
+		<span class="badge {{.BadgeColor}} tw-text-white">{{svg "octicon-dot-fill"}}</span>
+		<span class="comment-text-line">
+			<b>{{.AgentName}}</b> <span class="ui basic mini label">{{.Role}}</span>
+			{{ctx.Locale.Tr (printf "agents.run.status.%s" .Status)}}
+			{{if .Trigger}}· {{ctx.Locale.Tr "agents.run.triggered_by" .Trigger}}{{end}}
+			{{if .ActionsLink}}· <a href="{{.ActionsLink}}">{{ctx.Locale.Tr "agents.run.view_actions"}}</a>{{end}}
+		</span>
+		{{if or .Summary .Error .Notes .Progress}}
+		<div class="tw-ml-8 tw-mt-2">
+			{{if .Summary}}<div>{{.Summary}}</div>{{end}}
+			{{if .Error}}<div class="tw-text-red">{{.Error}}</div>{{end}}
+			{{if .Notes}}
+				<details>
+					<summary>{{ctx.Locale.Tr "agents.run.notes"}}</summary>
+					<ul>{{range .Notes}}<li>{{.}}</li>{{end}}</ul>
+				</details>
+			{{end}}
+			{{if .Progress}}
+				<details {{if .IsActive}}open{{end}}>
+					<summary>{{ctx.Locale.Tr "agents.run.progress"}}</summary>
+					<pre class="tw-whitespace-pre-wrap">{{.Progress}}</pre>
+				</details>
+			{{end}}
+		</div>
+		{{end}}
+	</div>
+{{end}}

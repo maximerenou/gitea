@@ -139,9 +139,17 @@ func PostProgress(ctx *context.APIContext) {
 		ctx.APIError(http.StatusUnprocessableEntity, err.Error())
 		return
 	}
-	if err := agents_model.AppendProgress(ctx, run.ID, util.TruncateRunes(opt.Text, agents_model.MaxProgressLength)); err != nil {
-		ctx.APIErrorInternal(err)
-		return
+	if opt.ConversationID != "" {
+		if err := agents_model.SetSessionConversation(ctx, run.SessionID, opt.ConversationID); err != nil {
+			ctx.APIErrorInternal(err)
+			return
+		}
+	}
+	if opt.Text != "" {
+		if err := agents_model.AppendProgress(ctx, run.ID, util.TruncateRunes(opt.Text, agents_model.MaxProgressLength)); err != nil {
+			ctx.APIErrorInternal(err)
+			return
+		}
 	}
 	ctx.Status(http.StatusNoContent)
 }

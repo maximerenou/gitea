@@ -73,6 +73,8 @@ type AgentRunComment struct {
 // swagger:model
 type AgentRunProgressOption struct {
 	Text string `json:"text"`
+	// the conversation id of the agent CLI, so that a later run of the session can resume it
+	ConversationID string `json:"conversation_id,omitempty"`
 }
 
 // AgentRunStatus tells the helper whether to keep going

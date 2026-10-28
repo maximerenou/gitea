@@ -165,6 +165,21 @@ func TestAgentReviewRunEndToEnd(t *testing.T) {
 			assert.Equal(t, 1, unittestCount(t, &issues_model.Review{IssueID: pr.ID, ReviewerID: f.bot.ID, Type: issues_model.ReviewTypeReject}))
 		})
 
+		t.Run("SessionCardOnThePullRequest", func(t *testing.T) {
+			pageURL := fmt.Sprintf("/user2/repo1/pulls/%d", pr.Index)
+			page := session.MakeRequest(t, NewRequest(t, "GET", pageURL), http.StatusOK).Body.String()
+			assert.Contains(t, page, "agent-session-card")
+			assert.Contains(t, page, f.bot.Name)
+			assert.Contains(t, page, "typo found")
+			assert.Contains(t, page, "reading new.txt") // the writer sees the output
+			assert.Contains(t, page, fmt.Sprintf("/user2/repo1/actions/runs/%d", unittest.AssertExistsAndLoadBean(t, &actions_model.ActionRun{ID: run.ActionRunID}).Index))
+			assert.NotContains(t, page, "pwned")
+
+			anonymous := MakeRequest(t, NewRequest(t, "GET", pageURL), http.StatusOK).Body.String()
+			assert.Contains(t, anonymous, "typo found")
+			assert.NotContains(t, anonymous, "reading new.txt") // but a reader does not
+		})
+
 		t.Run("InvalidResultFailsTheRun", func(t *testing.T) {
 			startRun()
 			runs := runsOfPR()
@@ -232,6 +247,8 @@ func TestAgentReviewRunEndToEnd(t *testing.T) {
 			requestReview()
 			assert.Len(t, runsOfPR(), count)
 			assert.ErrorIs(t, agents_service.ProcessQueueItem(ctx, item(2, agents.EventReviewRequested)), agents_service.ErrNotAllowed)
+			disabledPage := session.MakeRequest(t, NewRequest(t, "GET", fmt.Sprintf("/user2/repo1/pulls/%d", pr.Index)), http.StatusOK).Body.String()
+			assert.NotContains(t, disabledPage, "agent-session-card") // the page is the original one while disabled
 			setAgentsEnabled(t, true)
 		})
 	})

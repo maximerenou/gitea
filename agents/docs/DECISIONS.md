@@ -63,3 +63,19 @@ Gitea's test harness refuses to run as root, and this sandbox runs as root with 
 - Repository search/list: the triggering user is treated as *restricted* when building the visibility condition (no user object is available there). The list can be narrower than what an unrestricted user sees (public repos of private orgs reachable only through org membership are hidden), never wider.
 - "Direct commit" push mode (spec) is not available yet: the session record that configures it arrives in M4, until then the branch rule is strict.
 - A session cannot merge pull requests: merging pushes to a branch outside `agent/<session>/`. The result-application service (M3/M4) acts as the bot itself, with no token.
+
+## D16 — Codex spike result (milestone 3): not verified
+The sandbox's egress policy refused `developers.openai.com`, the only place the Codex documentation lives (the repository's docs only link there). While trying, four small files of the public `openai/codex` repository were also fetched over `raw.githubusercontent.com` before noticing that repository is outside the session's GitHub scope; nothing else was fetched from it. Therefore the Codex backend (`agents/runner-helper/internal/helper/codex.go`) is written from memory: option names (`exec`, `resume`, `--json`, `-C`, `-m`, `-s`, `-c key=value`), the provider keys (`model_providers.<id>.base_url|env_key|wire_api`) and the event shapes are assumptions, pinned by `codex_test.go` and nothing more. **Before relying on it, run `codex exec --json` once against a local Ollama and compare.** All CLI-specific knowledge is in that one file, so fixing it does not touch anything else. The `anthropic` provider is refused by this backend (Codex does not speak that API).
+Local models: Codex against Ollama's OpenAI-compatible `/v1` endpoint, as decided in D3.
+
+## D17 — Agent runs and secrets (milestone 3)
+An Actions task that belongs to an agent run receives **only** its session token as a secret: the repository secrets, the owner secrets and the task token (`GITEA_TOKEN`) are removed (`models/agents/task_secrets.go`). The agent is driven by a model reading untrusted text; it must not be able to print or exfiltrate secrets it does not need. M5 will add back the secrets referenced by the active MCP servers.
+
+## D18 — Result application (milestone 3)
+Applied by the bot itself, without a token: comment (all actions) and review with code comments (review action). Code comments are kept only for files the pull request changes, because Gitea accepts a review comment on any path. A bot cannot approve or reject a pull request it opened (posted as a comment, same rule as users). `pr`, `resolved_threads`, `subtasks`, `findings` and `plan` are validated but reported as "not applied by this version yet": they land with milestones 4, 7 and 8. The first result wins: `ClaimRunResult` is an atomic claim, so two simultaneous submissions cannot both post a review.
+
+## D19 — Runs need Gitea Actions
+`StartRun` refuses to start (with an error in the log, nothing visible to the requester) when `[actions] ENABLED` is false, because no runner would ever pick the job up. Owner-level runners also need the Actions unit on the target repository; use a global or repository runner with the label from the settings (see DESIGN §5).
+
+## D20 — Scheduled / person-less runs
+Not in this milestone. They have no session token, so the runner API (which only accepts session tokens) cannot serve them; they need another credential and come with milestone 7.

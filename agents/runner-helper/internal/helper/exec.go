@@ -45,7 +45,6 @@ func execAgent(ctx context.Context, e Env, stdout, stderr io.Writer) error {
 	if err != nil {
 		return markAgentError(e, st, err)
 	}
-	cmd.Cancel = nil
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} // so the whole tree can be stopped
 	cmd.Stderr = stderr
 	pipe, err := cmd.StdoutPipe()

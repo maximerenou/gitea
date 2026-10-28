@@ -64,6 +64,8 @@
 			</div>
 
 			{{template "repo/issue/view_content/comments" .}}
+			{{/* AGENTS-HOOK: agent session cards */}}
+			{{template "agents/session_card" .}}
 			<div class="timeline-item tw-hidden" id="timeline-comments-end"></div>
 
 			{{if and .Issue.IsPull (not $.Repository.IsArchived)}}

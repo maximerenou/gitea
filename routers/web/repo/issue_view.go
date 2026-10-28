@@ -33,6 +33,7 @@ import (
 	"gitea.dev/modules/templates/vars"
 	"gitea.dev/modules/util"
 	"gitea.dev/modules/web/middleware"
+	agents_web "gitea.dev/routers/web/agents" // AGENTS-HOOK: agent session cards
 	asymkey_service "gitea.dev/services/asymkey"
 	"gitea.dev/services/context"
 	"gitea.dev/services/context/upload"
@@ -406,6 +407,7 @@ func ViewIssue(ctx *context.Context) {
 		prepareIssueViewSidebarTimeTracker,
 		prepareIssueViewSidebarDependency,
 		prepareIssueViewSidebarPin,
+		agents_web.PrepareIssueView, // AGENTS-HOOK: agent session cards
 	}
 	if issue.IsPull {
 		prepareFuncs = append(prepareFuncs,

@@ -4137,5 +4137,15 @@
   "agents.event.confirmed_finding": "Finding confirmed",
   "agents.event.default_branch_ci_failed": "Default branch CI failed",
   "agents.event.scheduled_scan": "Scheduled scan",
-  "agents.event.push_default_branch": "Push to default branch"
+  "agents.event.push_default_branch": "Push to default branch",
+  "agents.run.status.pending": "is waiting for a runner",
+  "agents.run.status.running": "is working",
+  "agents.run.status.success": "finished",
+  "agents.run.status.failed": "failed",
+  "agents.run.status.cancelled": "was cancelled",
+  "agents.run.status.needs_human": "needs a person",
+  "agents.run.triggered_by": "requested by %s",
+  "agents.run.view_actions": "View the run",
+  "agents.run.notes": "What was not applied",
+  "agents.run.progress": "Output"
 }
