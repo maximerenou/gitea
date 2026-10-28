@@ -108,5 +108,5 @@ func TestSessionAndRun(t *testing.T) {
 
 	runs, err := ListRunsOfIssue(ctx, 10)
 	require.NoError(t, err)
-	assert.Len(t, runs, 1)
+	assert.Len(t, runs, 2) // the run above and the one created by ResultIsClaimedOnce
 }

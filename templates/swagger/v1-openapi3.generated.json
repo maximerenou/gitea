@@ -67,6 +67,36 @@
         },
         "description": "ActivityFeedsList"
       },
+      "AgentRunContext": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AgentRunContext"
+            }
+          }
+        },
+        "description": "AgentRunContext"
+      },
+      "AgentRunResultResponse": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AgentRunResultResponse"
+            }
+          }
+        },
+        "description": "AgentRunResultResponse"
+      },
+      "AgentRunStatus": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "$ref": "#/components/schemas/AgentRunStatus"
+            }
+          }
+        },
+        "description": "AgentRunStatus"
+      },
       "AnnotatedTag": {
         "content": {
           "application/json": {
@@ -2665,6 +2695,309 @@
         "required": [
           "time"
         ],
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunAgent": {
+        "description": "AgentRunAgent describes the agent of a run",
+        "properties": {
+          "base_url": {
+            "format": "uri",
+            "type": "string",
+            "x-go-name": "BaseURL"
+          },
+          "cli": {
+            "type": "string",
+            "x-go-name": "CLI"
+          },
+          "language": {
+            "type": "string",
+            "x-go-name": "Language"
+          },
+          "model": {
+            "type": "string",
+            "x-go-name": "Model"
+          },
+          "name": {
+            "type": "string",
+            "x-go-name": "Name"
+          },
+          "provider": {
+            "type": "string",
+            "x-go-name": "Provider"
+          },
+          "token": {
+            "type": "string",
+            "x-go-name": "Token"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunComment": {
+        "description": "AgentRunComment is a comment of the subject of an agent run, untrusted user content",
+        "properties": {
+          "author": {
+            "type": "string",
+            "x-go-name": "Author"
+          },
+          "body": {
+            "type": "string",
+            "x-go-name": "Body"
+          },
+          "id": {
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "ID"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunContext": {
+        "description": "AgentRunContext is everything the runner helper needs to carry out an agent run",
+        "properties": {
+          "action": {
+            "type": "string",
+            "x-go-name": "Action"
+          },
+          "agent": {
+            "$ref": "#/components/schemas/AgentRunAgent"
+          },
+          "branch": {
+            "description": "the branch of the session; the only branch family the session token may push to",
+            "type": "string",
+            "x-go-name": "Branch"
+          },
+          "checkout_ref": {
+            "description": "the ref to check out before running, empty for the default branch",
+            "type": "string",
+            "x-go-name": "CheckoutRef"
+          },
+          "config_commit_sha": {
+            "type": "string",
+            "x-go-name": "ConfigCommitSHA"
+          },
+          "conversation_id": {
+            "type": "string",
+            "x-go-name": "ConversationID"
+          },
+          "event": {
+            "type": "string",
+            "x-go-name": "Event"
+          },
+          "prompt": {
+            "type": "string",
+            "x-go-name": "Prompt"
+          },
+          "repository": {
+            "$ref": "#/components/schemas/AgentRunRepository"
+          },
+          "result_schema": {
+            "type": "string",
+            "x-go-name": "ResultSchema"
+          },
+          "run_id": {
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "RunID"
+          },
+          "session_id": {
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "SessionID"
+          },
+          "subject": {
+            "$ref": "#/components/schemas/AgentRunSubject"
+          },
+          "system_prompt": {
+            "type": "string",
+            "x-go-name": "SystemPrompt"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunProgressOption": {
+        "description": "AgentRunProgressOption is a piece of agent output to show on the session card",
+        "properties": {
+          "conversation_id": {
+            "description": "the conversation id of the agent CLI, so that a later run of the session can resume it",
+            "type": "string",
+            "x-go-name": "ConversationID"
+          },
+          "text": {
+            "type": "string",
+            "x-go-name": "Text"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunRepository": {
+        "description": "AgentRunRepository is the repository an agent run works on",
+        "properties": {
+          "clone_url": {
+            "format": "uri",
+            "type": "string",
+            "x-go-name": "CloneURL"
+          },
+          "default_branch": {
+            "type": "string",
+            "x-go-name": "DefaultBranch"
+          },
+          "full_name": {
+            "type": "string",
+            "x-go-name": "FullName"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunResultOption": {
+        "description": "AgentRunResultOption is the result.json of a run, see the agent result schema",
+        "properties": {
+          "comment": {
+            "type": "string",
+            "x-go-name": "Comment"
+          },
+          "findings": {
+            "items": {
+              "additionalProperties": {},
+              "type": "object"
+            },
+            "type": "array",
+            "x-go-name": "Findings"
+          },
+          "plan": {
+            "additionalProperties": {},
+            "type": "object",
+            "x-go-name": "Plan"
+          },
+          "pr": {
+            "additionalProperties": {},
+            "type": "object",
+            "x-go-name": "PR"
+          },
+          "resolved_threads": {
+            "items": {
+              "format": "int64",
+              "type": "integer"
+            },
+            "type": "array",
+            "x-go-name": "ResolvedThreads"
+          },
+          "review": {
+            "additionalProperties": {},
+            "description": "review, pr, resolved_threads, subtasks, findings and plan follow the agent result schema",
+            "type": "object",
+            "x-go-name": "Review"
+          },
+          "status": {
+            "type": "string",
+            "x-go-name": "Status"
+          },
+          "subtasks": {
+            "items": {
+              "additionalProperties": {},
+              "type": "object"
+            },
+            "type": "array",
+            "x-go-name": "Subtasks"
+          },
+          "summary": {
+            "type": "string",
+            "x-go-name": "Summary"
+          },
+          "version": {
+            "type": "string",
+            "x-go-name": "Version"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunResultResponse": {
+        "description": "AgentRunResultResponse reports what the service did with a result",
+        "properties": {
+          "notes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "x-go-name": "Notes"
+          },
+          "status": {
+            "type": "string",
+            "x-go-name": "Status"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunStatus": {
+        "description": "AgentRunStatus tells the helper whether to keep going",
+        "properties": {
+          "cancelled": {
+            "type": "boolean",
+            "x-go-name": "Cancelled"
+          },
+          "status": {
+            "type": "string",
+            "x-go-name": "Status"
+          }
+        },
+        "type": "object",
+        "x-go-package": "gitea.dev/modules/structs"
+      },
+      "AgentRunSubject": {
+        "properties": {
+          "author": {
+            "type": "string",
+            "x-go-name": "Author"
+          },
+          "base_branch": {
+            "type": "string",
+            "x-go-name": "BaseBranch"
+          },
+          "body": {
+            "type": "string",
+            "x-go-name": "Body"
+          },
+          "comments": {
+            "items": {
+              "$ref": "#/components/schemas/AgentRunComment"
+            },
+            "type": "array",
+            "x-go-name": "Comments"
+          },
+          "head_branch": {
+            "type": "string",
+            "x-go-name": "HeadBranch"
+          },
+          "head_sha": {
+            "type": "string",
+            "x-go-name": "HeadSHA"
+          },
+          "kind": {
+            "type": "string",
+            "x-go-name": "Kind"
+          },
+          "number": {
+            "format": "int64",
+            "type": "integer",
+            "x-go-name": "Number"
+          },
+          "state": {
+            "type": "string",
+            "x-go-name": "State"
+          },
+          "title": {
+            "type": "string",
+            "x-go-name": "Title"
+          }
+        },
+        "title": "AgentRunSubject is the issue or pull request an agent run is about. Every text field is untrusted user content.",
         "type": "object",
         "x-go-package": "gitea.dev/modules/structs"
       },
@@ -12843,6 +13176,165 @@
         "summary": "Create a repository on behalf of a user",
         "tags": [
           "admin"
+        ]
+      }
+    },
+    "/agents/runs/{id}/context": {
+      "get": {
+        "description": "Only accepts the session token of that run.",
+        "operationId": "agentRunGetContext",
+        "parameters": [
+          {
+            "description": "id of the agent run",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AgentRunContext"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/notFound"
+          }
+        },
+        "summary": "Get the context of an agent run",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/runs/{id}/progress": {
+      "post": {
+        "operationId": "agentRunPostProgress",
+        "parameters": [
+          {
+            "description": "id of the agent run",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRunProgressOption"
+              }
+            }
+          },
+          "x-originalParamName": "body"
+        },
+        "responses": {
+          "204": {
+            "$ref": "#/components/responses/empty"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/notFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/conflict"
+          }
+        },
+        "summary": "Report the progress of an agent run",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/runs/{id}/result": {
+      "post": {
+        "operationId": "agentRunPostResult",
+        "parameters": [
+          {
+            "description": "id of the agent run",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRunResultOption"
+              }
+            }
+          },
+          "required": true,
+          "x-originalParamName": "body"
+        },
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AgentRunResultResponse"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/notFound"
+          },
+          "409": {
+            "$ref": "#/components/responses/conflict"
+          },
+          "422": {
+            "$ref": "#/components/responses/validationError"
+          }
+        },
+        "summary": "Submit the result of an agent run",
+        "tags": [
+          "agents"
+        ]
+      }
+    },
+    "/agents/runs/{id}/status": {
+      "get": {
+        "operationId": "agentRunGetStatus",
+        "parameters": [
+          {
+            "description": "id of the agent run",
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "int64",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/components/responses/AgentRunStatus"
+          },
+          "403": {
+            "$ref": "#/components/responses/forbidden"
+          },
+          "404": {
+            "$ref": "#/components/responses/notFound"
+          }
+        },
+        "summary": "Get the status of an agent run",
+        "tags": [
+          "agents"
         ]
       }
     },

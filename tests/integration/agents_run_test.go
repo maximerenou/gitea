@@ -173,7 +173,8 @@ func TestAgentReviewRunEndToEnd(t *testing.T) {
 			assert.Contains(t, page, "typo found")
 			assert.Contains(t, page, "reading new.txt") // the writer sees the output
 			assert.Contains(t, page, fmt.Sprintf("/user2/repo1/actions/runs/%d", unittest.AssertExistsAndLoadBean(t, &actions_model.ActionRun{ID: run.ActionRunID}).Index))
-			assert.NotContains(t, page, "pwned")
+			assert.NotContains(t, page, agents_model.SessionTokenPrefix) // no session token ever reaches a page
+			assert.NotContains(t, page, "model-provider-secret")
 
 			anonymous := MakeRequest(t, NewRequest(t, "GET", pageURL), http.StatusOK).Body.String()
 			assert.Contains(t, anonymous, "typo found")
