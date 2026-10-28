@@ -61,6 +61,25 @@ func TestSessionAndRun(t *testing.T) {
 		assert.True(t, strings.HasSuffix(r.Progress, "END"))
 	})
 
+	t.Run("ResultIsClaimedOnce", func(t *testing.T) {
+		other := &Run{SessionID: s.ID, AgentID: 1, RepoID: 1, IssueID: 10}
+		require.NoError(t, CreateRun(ctx, other))
+		first, err := ClaimRunResult(ctx, other.ID)
+		require.NoError(t, err)
+		assert.True(t, first)
+		second, err := ClaimRunResult(ctx, other.ID)
+		require.NoError(t, err)
+		assert.False(t, second) // a simultaneous submission loses
+		ok, err := FinishRun(ctx, other.ID, RunSuccess, "s", "", `{"version":"v1"}`, "")
+		require.NoError(t, err)
+		assert.True(t, ok) // the claim does not block the owner from finishing
+		got, _ := GetRunByID(ctx, other.ID)
+		assert.Equal(t, `{"version":"v1"}`, got.Result)
+		again, err := ClaimRunResult(ctx, other.ID)
+		require.NoError(t, err)
+		assert.False(t, again) // nor can an ended run be claimed
+	})
+
 	t.Run("FinishRunHappensOnce", func(t *testing.T) {
 		_, err := FinishRun(ctx, run.ID, RunRunning, "", "", "", "")
 		assert.ErrorIs(t, err, util.ErrInvalidArgument) // not a final status

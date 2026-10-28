@@ -126,6 +126,18 @@ func MarkRunRunning(ctx context.Context, runID int64) error {
 	return err
 }
 
+// resultClaimed marks a run whose result is being applied; FinishRun replaces it with the real result.
+const resultClaimed = "(applying)"
+
+// ClaimRunResult lets exactly one caller apply the result of a run: it succeeds once, while the run is still active,
+// so two simultaneous submissions cannot both post their review.
+func ClaimRunResult(ctx context.Context, runID int64) (bool, error) {
+	affected, err := db.GetEngine(ctx).
+		Where(builder.Eq{"id": runID}.And(builder.NotIn("status", terminalRunStatuses)).And(builder.Or(builder.Eq{"result": ""}, builder.IsNull{"result"}))).
+		Cols("result").Update(&Run{Result: resultClaimed})
+	return affected == 1, err
+}
+
 // FinishRun records the end of a run exactly once: it only applies while the run has not reached a final status,
 // so a late result, a second call or a cancellation racing with a result cannot overwrite what was decided first.
 // It reports whether this call was the one that ended the run.

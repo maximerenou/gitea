@@ -32,6 +32,7 @@ import (
 	"gitea.dev/routers/private"
 	web_routers "gitea.dev/routers/web"
 	actions_service "gitea.dev/services/actions"
+	agents_service "gitea.dev/services/agents"
 	asymkey_service "gitea.dev/services/asymkey"
 	"gitea.dev/services/auth"
 	"gitea.dev/services/auth/source/oauth2"
@@ -165,6 +166,7 @@ func InitWebInstalled(ctx context.Context) {
 	mustInit(svg.Init)
 
 	mustInitCtx(ctx, actions_service.Init)
+	mustInitCtx(ctx, agents_service.Init) // AGENTS-HOOK: agents notifier and request queue
 
 	mustInit(repo_service.InitLicenseClassifier)
 
