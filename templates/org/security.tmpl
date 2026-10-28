@@ -1,0 +1,47 @@
+{{template "base/head" .}}
+<div role="main" aria-label="{{.Title}}" class="page-content organization security">
+	{{template "org/header" .}}
+	<div class="ui container">
+		<div class="flex-left-right tw-mb-2">
+			<div class="flex-text-block">
+				{{range $severity := .Severities}}{{with index $.OpenCounts $severity}}{{template "repo/security/severity" (dict "Severity" $severity)}}<span class="tw-mr-2">{{.}}</span>{{end}}{{end}}
+			</div>
+			<div class="ui compact small menu">
+				<a class="item {{if not .Severity}}active{{end}}" href="?">{{ctx.Locale.Tr "depscan.all_severities"}}</a>
+				{{range $severity := .Severities}}
+					<a class="item {{if eq $.Severity $severity}}active{{end}}" href="?severity={{$severity}}">{{ctx.Locale.Tr (printf "depscan.severity.%s" $severity)}}</a>
+				{{end}}
+			</div>
+		</div>
+		<div class="ui segment">
+			<div class="flex-divided-list items-with-main">
+				{{range $a := .Alerts}}
+					{{$repo := index $.Repos $a.RepoID}}
+					<div class="item tw-items-center">
+						<div class="item-leading">{{template "repo/security/severity" (dict "Severity" $a.Severity)}}</div>
+						<div class="item-main">
+							<div class="item-title">
+								<a href="{{$repo.Link}}/security/alerts/{{$a.ID}}">{{if $a.Summary}}{{$a.Summary}}{{else}}{{$a.Title}}{{end}}</a>
+							</div>
+							<div class="item-body flex-text-block">
+								<a href="{{$repo.Link}}/security">{{$repo.Name}}</a>
+								<code>{{$a.Package}} {{$a.Version}}</code>
+								<span>{{$a.Ecosystem}}</span>
+								<span class="tw-text-text-light">{{$a.Manifest}}</span>
+							</div>
+						</div>
+						<div class="item-trailing">{{DateUtils.TimeSince $a.Created}}</div>
+					</div>
+				{{else}}
+					<div class="empty-placeholder">
+						{{svg "octicon-shield-check" 48}}
+						<h2>{{ctx.Locale.Tr "depscan.no_alerts"}}</h2>
+						<p>{{ctx.Locale.Tr "depscan.org_help"}}</p>
+					</div>
+				{{end}}
+			</div>
+		</div>
+		{{template "base/paginate" dict "Page" .Page}}
+	</div>
+</div>
+{{template "base/footer" .}}

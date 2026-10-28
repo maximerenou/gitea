@@ -1,0 +1,4 @@
+{{/* Status: an agent run or session status */}}
+<span class="flex-text-inline" data-tooltip-content="{{ctx.Locale.Tr (printf "agents.status.%s" .Status)}}">
+	{{template "repo/icons/action_status" (dict "Status" (Iif (eq .Status "queued") "pending" .Status) "IconVariant" "circle-fill")}}
+</span>

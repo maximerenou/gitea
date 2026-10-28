@@ -71,6 +71,10 @@ func subjectToSource(value []string) (result []activities_model.NotificationSour
 			result = append(result, activities_model.NotificationSourceCommit)
 		case "repository":
 			result = append(result, activities_model.NotificationSourceRepository)
+		case "agentsession":
+			result = append(result, activities_model.NotificationSourceAgentSession)
+		case "securityalert":
+			result = append(result, activities_model.NotificationSourceSecurityAlert)
 		}
 	}
 	return result

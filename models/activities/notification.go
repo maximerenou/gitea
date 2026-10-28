@@ -46,6 +46,10 @@ const (
 	NotificationSourceCommit
 	// NotificationSourceRepository is a notification for a repository
 	NotificationSourceRepository
+	// NotificationSourceAgentSession is a notification of a finished agent run, AGENTS-HOOK
+	NotificationSourceAgentSession
+	// NotificationSourceSecurityAlert is a notification of a new critical dependency alert, DEPSCAN-HOOK
+	NotificationSourceSecurityAlert
 )
 
 // Notification represents a notification
@@ -60,6 +64,10 @@ type Notification struct {
 	IssueID   int64 `xorm:"NOT NULL"`
 	CommitID  string
 	CommentID int64
+
+	// the subjects that are neither issues nor commits, with their link relative to the repository
+	Subject     string `xorm:"VARCHAR(255) NOT NULL DEFAULT ''"`
+	SubjectLink string `xorm:"VARCHAR(255) NOT NULL DEFAULT ''"`
 
 	UpdatedBy int64 `xorm:"NOT NULL"`
 
@@ -291,6 +299,8 @@ func (n *Notification) HTMLURL(ctx context.Context) string {
 		return n.Repository.HTMLURL(ctx) + "/commit/" + url.PathEscape(n.CommitID)
 	case NotificationSourceRepository:
 		return n.Repository.HTMLURL(ctx)
+	case NotificationSourceAgentSession, NotificationSourceSecurityAlert:
+		return n.Repository.HTMLURL(ctx) + "/" + n.SubjectLink
 	}
 	return ""
 }
@@ -307,8 +317,40 @@ func (n *Notification) Link(ctx context.Context) string {
 		return n.Repository.Link() + "/commit/" + url.PathEscape(n.CommitID)
 	case NotificationSourceRepository:
 		return n.Repository.Link()
+	case NotificationSourceAgentSession, NotificationSourceSecurityAlert:
+		return n.Repository.Link() + "/" + n.SubjectLink
 	}
 	return ""
+}
+
+// SubjectIcon is the icon of the subjects that are neither issues nor commits
+func (n *Notification) SubjectIcon() string {
+	switch n.Source {
+	case NotificationSourceAgentSession:
+		return "octicon-copilot"
+	case NotificationSourceSecurityAlert:
+		return "octicon-shield"
+	}
+	return "octicon-repo"
+}
+
+// NotifySubject notifies a user about a subject of a repository that is neither an issue nor a commit,
+// a single notification per subject is kept and marked unread again
+func NotifySubject(ctx context.Context, userID, repoID int64, source NotificationSource, subject, link string, updatedByID int64) error {
+	n := &Notification{}
+	has, err := db.GetEngine(ctx).Where("user_id = ? AND repo_id = ? AND source = ? AND subject_link = ?", userID, repoID, source, link).Get(n)
+	if err != nil {
+		return err
+	}
+	if !has {
+		return db.Insert(ctx, &Notification{
+			UserID: userID, RepoID: repoID, Status: NotificationStatusUnread, Source: source,
+			Subject: subject, SubjectLink: link, UpdatedBy: updatedByID,
+		})
+	}
+	n.Status, n.Subject, n.UpdatedBy = NotificationStatusUnread, subject, updatedByID
+	_, err = db.GetEngine(ctx).ID(n.ID).Cols("status", "subject", "updated_by").Update(n)
+	return err
 }
 
 // APIURL formats a URL-string to the notification

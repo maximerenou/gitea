@@ -24,6 +24,16 @@
 			<a class="{{if .PageIsSettingsTags}}active {{end}}item" href="{{.RepoLink}}/settings/tags">
 				{{ctx.Locale.Tr "repo.settings.tags"}}
 			</a>
+			{{if EnableAgents}}{{/* AGENTS-HOOK */}}
+				<a class="{{if .PageIsSettingsAgents}}active {{end}}item" href="{{.RepoLink}}/settings/agents">
+					{{ctx.Locale.Tr "agents.title"}}
+				</a>
+			{{end}}
+			{{if EnableDependencyScanning}}{{/* DEPSCAN-HOOK */}}
+				<a class="{{if .PageIsSettingsDependencyScanning}}active {{end}}item" href="{{.RepoLink}}/settings/dependency-scanning">
+					{{ctx.Locale.Tr "depscan.title"}}
+				</a>
+			{{end}}
 			{{if .SignedUser.CanEditGitHook}}
 				<a class="{{if .PageIsSettingsGitHooks}}active {{end}}item" href="{{.RepoLink}}/settings/hooks/git">
 					{{ctx.Locale.Tr "repo.settings.githooks"}}

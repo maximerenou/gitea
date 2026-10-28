@@ -1280,6 +1280,26 @@
         }
       }
     },
+    "/agents": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "agents"
+        ],
+        "summary": "List the agents available on the instance",
+        "operationId": "agentList",
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AgentList"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
     "/gitignore/templates": {
       "get": {
         "produces": [
@@ -1553,7 +1573,9 @@
                 "issue",
                 "pull",
                 "commit",
-                "repository"
+                "repository",
+                "agentsession",
+                "securityalert"
               ],
               "type": "string"
             },
@@ -7618,6 +7640,482 @@
         }
       }
     },
+    "/repos/{owner}/{repo}/agents/sessions": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List the agent sessions of a repository",
+        "operationId": "agentListSessions",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "enum": [
+              "queued",
+              "waiting",
+              "running",
+              "success",
+              "failure",
+              "cancelled"
+            ],
+            "type": "string",
+            "description": "only the sessions with this status",
+            "name": "status",
+            "in": "query"
+          },
+          {
+            "enum": [
+              "task",
+              "issue",
+              "pull"
+            ],
+            "type": "string",
+            "description": "only the sessions of this kind",
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "only the sessions of the agent with this mention name",
+            "name": "agent",
+            "in": "query"
+          },
+          {
+            "type": "boolean",
+            "description": "only the sessions you created",
+            "name": "created_by_me",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page number of results to return (1-based)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page size of results",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AgentSessionList"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Start an agent development session, it runs with your own API key and permissions",
+        "operationId": "agentCreateSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/CreateAgentSessionOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/AgentSession"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Get an agent session",
+        "operationId": "agentGetSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AgentSession"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}/cancel": {
+      "post": {
+        "tags": [
+          "repository"
+        ],
+        "summary": "Cancel the active and queued runs of an agent session",
+        "operationId": "agentCancelSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}/events": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List the Codex events of an agent session, oldest first",
+        "operationId": "agentListEvents",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "page number of results to return (1-based)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page size of results",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AgentEventList"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}/instructions": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Send new instructions to an agent session, they run with your own API key and permissions",
+        "operationId": "agentSendInstruction",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/AgentInstructionOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/AgentRun"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}/resume": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Resume an agent session whose latest run, yours, was interrupted, with your own API key and permissions",
+        "operationId": "agentResumeSession",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/AgentRun"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}/runs": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List the runs of an agent session",
+        "operationId": "agentListRuns",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "description": "page number of results to return (1-based)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page size of results",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/AgentRunList"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/agents/sessions/{id}/runs/{run}/retry": {
+      "post": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Retry one of your finished runs of an agent session, with your own API key and permissions",
+        "operationId": "agentRetryRun",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the session",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the run",
+            "name": "run",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/AgentRun"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
     "/repos/{owner}/{repo}/archive/{archive}": {
       "get": {
         "produces": [
@@ -9279,6 +9777,289 @@
         "responses": {
           "200": {
             "$ref": "#/responses/FileDeleteResponse"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/dependencies": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List the package versions the manifests and lockfiles of the default branch pin, as of the last scan",
+        "operationId": "repoListDependencies",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "part of the package names, ignoring case",
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page number of results to return (1-based)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page size of results",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DependencyList"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/dependency-alerts": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "List the vulnerability alerts on the dependencies of a repository",
+        "operationId": "repoListDependencyAlerts",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "open, fixed or dismissed, all when empty",
+            "name": "state",
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "critical, high, moderate, low or unknown, all when empty",
+            "name": "severity",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page number of results to return (1-based)",
+            "name": "page",
+            "in": "query"
+          },
+          {
+            "type": "integer",
+            "description": "page size of results",
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DependencyAlertList"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/dependency-alerts/{id}": {
+      "patch": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Dismiss a dependency alert with a reason, or reopen a dismissed one",
+        "operationId": "repoEditDependencyAlert",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "id of the alert",
+            "name": "id",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/EditDependencyAlertOption"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DependencyAlert"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/dependency-updates": {
+      "get": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Get how an agent updates the dependencies of a repository",
+        "operationId": "repoGetDependencyUpdates",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "$ref": "#/responses/DependencyUpdates"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      },
+      "put": {
+        "description": "Whoever changes the updates becomes their updater, the agent then runs with their API key and permissions.",
+        "consumes": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Change how an agent updates the dependencies of a repository",
+        "operationId": "repoEditDependencyUpdates",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/DependencyUpdatesOption"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "$ref": "#/responses/empty"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/dependency-updates/run": {
+      "post": {
+        "description": "The doer takes the updates over, the agent then runs with their API key and permissions.",
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Start the dependency updates at once",
+        "operationId": "repoRunDependencyUpdates",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "$ref": "#/responses/DependencyUpdatesRun"
           },
           "default": {
             "$ref": "#/responses/error"
@@ -14868,7 +15649,9 @@
                 "issue",
                 "pull",
                 "commit",
-                "repository"
+                "repository",
+                "agentsession",
+                "securityalert"
               ],
               "type": "string"
             },
@@ -16562,6 +17345,114 @@
         "responses": {
           "200": {
             "$ref": "#/responses/string"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/pulls/{index}/agent-merge": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Ask an agent to bring a pull request up to date, then to schedule its merge when its checks pass, as you",
+        "operationId": "agentMergePullRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "index of the pull request",
+            "name": "index",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/AgentMergeOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/AgentSession"
+          },
+          "default": {
+            "$ref": "#/responses/error"
+          }
+        }
+      }
+    },
+    "/repos/{owner}/{repo}/pulls/{index}/agent-review": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "repository"
+        ],
+        "summary": "Ask an agent to review a pull request, with your own API key and permissions",
+        "operationId": "agentReviewPullRequest",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "owner of the repo",
+            "name": "owner",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "string",
+            "description": "name of the repo",
+            "name": "repo",
+            "in": "path",
+            "required": true
+          },
+          {
+            "type": "integer",
+            "format": "int64",
+            "description": "index of the pull request",
+            "name": "index",
+            "in": "path",
+            "required": true
+          },
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/AgentReviewOption"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "$ref": "#/responses/AgentSession"
           },
           "default": {
             "$ref": "#/responses/error"
@@ -25029,6 +25920,233 @@
       },
       "x-go-package": "gitea.dev/modules/structs"
     },
+    "Agent": {
+      "description": "Agent is a mentionable Codex agent defined by the site administrator",
+      "type": "object",
+      "properties": {
+        "has_key": {
+          "description": "whether the authenticated user has an API key for the agent, runs always use the key of whoever triggers them",
+          "type": "boolean",
+          "x-go-name": "HasKey"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "mention_name": {
+          "description": "the bot account to mention",
+          "type": "string",
+          "x-go-name": "MentionName"
+        },
+        "model": {
+          "type": "string",
+          "x-go-name": "Model"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "AgentEvent": {
+      "description": "AgentEvent is a Codex CLI event of a run, as the agent reported it",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "payload": {
+          "description": "the Codex JSONL event",
+          "type": "string",
+          "x-go-name": "Payload"
+        },
+        "run_id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "RunID"
+        },
+        "type": {
+          "type": "string",
+          "x-go-name": "Type"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "AgentInstructionOption": {
+      "description": "AgentInstructionOption sends new instructions to a session",
+      "type": "object",
+      "required": [
+        "prompt"
+      ],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "x-go-name": "Prompt"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "AgentMergeOption": {
+      "description": "AgentMergeOption asks an agent to merge the target branch into a pull request, then schedules its merge",
+      "type": "object",
+      "required": [
+        "agent"
+      ],
+      "properties": {
+        "agent": {
+          "description": "the mention name of the agent",
+          "type": "string",
+          "x-go-name": "Agent"
+        },
+        "review": {
+          "description": "whether the agent reviews the pull request first, its verdict can then block the merge",
+          "type": "boolean",
+          "x-go-name": "Review"
+        },
+        "style": {
+          "description": "merge, rebase, rebase-merge, squash or fast-forward-only, defaults to the repository's default",
+          "type": "string",
+          "x-go-name": "Style"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "AgentReviewOption": {
+      "description": "AgentReviewOption asks an agent to review a pull request, it runs with the authenticated user's key and permissions",
+      "type": "object",
+      "required": [
+        "agent"
+      ],
+      "properties": {
+        "agent": {
+          "description": "the mention name of the agent",
+          "type": "string",
+          "x-go-name": "Agent"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "AgentRun": {
+      "description": "AgentRun is one Codex execution of a session",
+      "type": "object",
+      "properties": {
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
+        },
+        "error": {
+          "type": "string",
+          "x-go-name": "Error"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "prompt": {
+          "type": "string",
+          "x-go-name": "Prompt"
+        },
+        "read_only_reason": {
+          "description": "set when the run could not push, with the reason",
+          "type": "string",
+          "x-go-name": "ReadOnlyReason"
+        },
+        "started_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Started"
+        },
+        "status": {
+          "type": "string",
+          "x-go-name": "Status"
+        },
+        "stopped_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Stopped"
+        },
+        "summary": {
+          "type": "string",
+          "x-go-name": "Summary"
+        },
+        "trigger_user": {
+          "$ref": "#/definitions/User"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "AgentSession": {
+      "description": "AgentSession is the conversation of an agent on an issue, a pull request or a task",
+      "type": "object",
+      "properties": {
+        "agent": {
+          "type": "string",
+          "x-go-name": "Agent"
+        },
+        "base_branch": {
+          "type": "string",
+          "x-go-name": "BaseBranch"
+        },
+        "branch": {
+          "type": "string",
+          "x-go-name": "Branch"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
+        },
+        "creator": {
+          "$ref": "#/definitions/User"
+        },
+        "html_url": {
+          "type": "string",
+          "x-go-name": "HTMLURL"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "issue_number": {
+          "description": "the issue or pull request the session talks in",
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "IssueNumber"
+        },
+        "kind": {
+          "description": "task, issue or pull",
+          "type": "string",
+          "x-go-name": "Kind"
+        },
+        "status": {
+          "description": "queued, waiting, running, success, failure or cancelled",
+          "type": "string",
+          "x-go-name": "Status"
+        },
+        "title": {
+          "type": "string",
+          "x-go-name": "Title"
+        },
+        "updated_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Updated"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
     "AnnotatedTag": {
       "description": "AnnotatedTag represents an annotated tag",
       "type": "object",
@@ -26155,6 +27273,37 @@
           "type": "string",
           "x-go-name": "Ref",
           "example": "refs/heads/main"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "CreateAgentSessionOption": {
+      "description": "CreateAgentSessionOption starts a development session, it runs with the authenticated user's key and permissions",
+      "type": "object",
+      "required": [
+        "agent",
+        "prompt"
+      ],
+      "properties": {
+        "agent": {
+          "description": "the mention name of the agent",
+          "type": "string",
+          "x-go-name": "Agent"
+        },
+        "base_branch": {
+          "description": "defaults to the default branch",
+          "type": "string",
+          "x-go-name": "BaseBranch"
+        },
+        "prompt": {
+          "description": "the task",
+          "type": "string",
+          "x-go-name": "Prompt"
+        },
+        "reasoning_effort": {
+          "description": "minimal, low, medium or high, defaults to the agent's",
+          "type": "string",
+          "x-go-name": "ReasoningEffort"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -27685,6 +28834,232 @@
       },
       "x-go-package": "gitea.dev/modules/structs"
     },
+    "Dependency": {
+      "description": "Dependency is a package version a manifest or lockfile of the default branch pins",
+      "type": "object",
+      "properties": {
+        "ecosystem": {
+          "type": "string",
+          "x-go-name": "Ecosystem"
+        },
+        "manifest": {
+          "type": "string",
+          "x-go-name": "Manifest"
+        },
+        "name": {
+          "type": "string",
+          "x-go-name": "Name"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "DependencyAlert": {
+      "description": "DependencyAlert is a known vulnerability affecting a dependency of a repository",
+      "type": "object",
+      "properties": {
+        "aliases": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Aliases"
+        },
+        "created_at": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "Created"
+        },
+        "dismissed_reason": {
+          "description": "why it was dismissed",
+          "type": "string",
+          "x-go-name": "DismissedReason"
+        },
+        "ecosystem": {
+          "type": "string",
+          "x-go-name": "Ecosystem"
+        },
+        "fixed_versions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "FixedVersions"
+        },
+        "html_url": {
+          "type": "string",
+          "x-go-name": "HTMLURL"
+        },
+        "id": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "ID"
+        },
+        "manifest": {
+          "type": "string",
+          "x-go-name": "Manifest"
+        },
+        "package": {
+          "type": "string",
+          "x-go-name": "Package"
+        },
+        "score": {
+          "type": "number",
+          "format": "double",
+          "x-go-name": "Score"
+        },
+        "severity": {
+          "description": "critical, high, moderate, low or unknown",
+          "type": "string",
+          "x-go-name": "Severity"
+        },
+        "state": {
+          "description": "open, fixed or dismissed",
+          "type": "string",
+          "x-go-name": "State"
+        },
+        "summary": {
+          "type": "string",
+          "x-go-name": "Summary"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
+        },
+        "vuln_id": {
+          "type": "string",
+          "x-go-name": "VulnID"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "DependencyUpdates": {
+      "description": "DependencyUpdates is how an agent updates the dependencies of a repository",
+      "type": "object",
+      "properties": {
+        "agent": {
+          "description": "mention name of the update agent, empty when the updates are off",
+          "type": "string",
+          "x-go-name": "Agent"
+        },
+        "ignore": {
+          "description": "package name patterns to leave as they are, optionally followed by @no-major or @ and versions to skip",
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Ignore"
+        },
+        "interval": {
+          "description": "daily, weekly or monthly",
+          "type": "string",
+          "x-go-name": "Interval"
+        },
+        "last_error": {
+          "description": "why the latest updates failed",
+          "type": "string",
+          "x-go-name": "LastError"
+        },
+        "last_run": {
+          "type": "string",
+          "format": "date-time",
+          "x-go-name": "LastRun"
+        },
+        "major": {
+          "description": "whether major versions are included",
+          "type": "boolean",
+          "x-go-name": "Major"
+        },
+        "on_alert": {
+          "description": "whether a scan opening a high or critical alert starts the updates of its ecosystem",
+          "type": "boolean",
+          "x-go-name": "OnAlert"
+        },
+        "refused": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RefusedDependencyVersion"
+          },
+          "x-go-name": "Refused"
+        },
+        "scope": {
+          "description": "all or security",
+          "type": "string",
+          "x-go-name": "Scope"
+        },
+        "updater": {
+          "description": "user whose API key and permissions the updates use",
+          "type": "string",
+          "x-go-name": "Updater"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "DependencyUpdatesOption": {
+      "description": "DependencyUpdatesOption changes how an agent updates the dependencies of a repository, the doer becomes the updater",
+      "type": "object",
+      "properties": {
+        "agent": {
+          "description": "mention name of the update agent, empty to turn the updates off",
+          "type": "string",
+          "x-go-name": "Agent"
+        },
+        "allow_refused": {
+          "description": "refused versions the updates may propose again",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/RefusedDependencyVersion"
+          },
+          "x-go-name": "AllowRefused"
+        },
+        "ignore": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "x-go-name": "Ignore"
+        },
+        "interval": {
+          "description": "daily, weekly or monthly",
+          "type": "string",
+          "x-go-name": "Interval"
+        },
+        "major": {
+          "type": "boolean",
+          "x-go-name": "Major"
+        },
+        "on_alert": {
+          "type": "boolean",
+          "x-go-name": "OnAlert"
+        },
+        "scope": {
+          "description": "all or security",
+          "type": "string",
+          "x-go-name": "Scope"
+        },
+        "take_over": {
+          "description": "become the updater, with your API key, even when nothing else changes",
+          "type": "boolean",
+          "x-go-name": "TakeOver"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "DependencyUpdatesRun": {
+      "description": "DependencyUpdatesRun is how many ecosystems the updates started",
+      "type": "object",
+      "properties": {
+        "started": {
+          "type": "integer",
+          "format": "int64",
+          "x-go-name": "Started"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
     "DeployKey": {
       "type": "object",
       "properties": {
@@ -27997,6 +29372,26 @@
           "type": "string",
           "format": "date-time",
           "x-go-name": "Deadline"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "EditDependencyAlertOption": {
+      "description": "EditDependencyAlertOption dismisses or reopens a dependency alert",
+      "type": "object",
+      "required": [
+        "state"
+      ],
+      "properties": {
+        "reason": {
+          "description": "why the alert is not a risk, required to dismiss it",
+          "type": "string",
+          "x-go-name": "Reason"
+        },
+        "state": {
+          "description": "dismissed or open",
+          "type": "string",
+          "x-go-name": "State"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -30682,9 +32077,11 @@
             "Issue",
             "Pull",
             "Commit",
-            "Repository"
+            "Repository",
+            "AgentSession",
+            "SecurityAlert"
           ],
-          "x-go-enum-desc": "Issue NotifySubjectIssue an issue is subject of a notification\nPull NotifySubjectPull a pull is subject of an notification\nCommit NotifySubjectCommit a commit is subject of an notification\nRepository NotifySubjectRepository a repository is subject of an notification",
+          "x-go-enum-desc": "Issue NotifySubjectIssue an issue is subject of a notification\nPull NotifySubjectPull a pull is subject of an notification\nCommit NotifySubjectCommit a commit is subject of an notification\nRepository NotifySubjectRepository a repository is subject of an notification\nAgentSession NotifySubjectAgentSession an agent session is subject of a notification\nSecurityAlert NotifySubjectSecurityAlert a dependency alert is subject of a notification",
           "x-go-name": "Type"
         },
         "url": {
@@ -32017,6 +33414,25 @@
           "description": "The URL to access this Git reference",
           "type": "string",
           "x-go-name": "URL"
+        }
+      },
+      "x-go-package": "gitea.dev/modules/structs"
+    },
+    "RefusedDependencyVersion": {
+      "description": "RefusedDependencyVersion is a package version the dependency updates no longer propose, as its pull request was closed",
+      "type": "object",
+      "properties": {
+        "ecosystem": {
+          "type": "string",
+          "x-go-name": "Ecosystem"
+        },
+        "package": {
+          "type": "string",
+          "x-go-name": "Package"
+        },
+        "version": {
+          "type": "string",
+          "x-go-name": "Version"
         }
       },
       "x-go-package": "gitea.dev/modules/structs"
@@ -33786,6 +35202,54 @@
         }
       }
     },
+    "AgentEventList": {
+      "description": "AgentEventList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/AgentEvent"
+        }
+      }
+    },
+    "AgentList": {
+      "description": "AgentList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Agent"
+        }
+      }
+    },
+    "AgentRun": {
+      "description": "AgentRun",
+      "schema": {
+        "$ref": "#/definitions/AgentRun"
+      }
+    },
+    "AgentRunList": {
+      "description": "AgentRunList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/AgentRun"
+        }
+      }
+    },
+    "AgentSession": {
+      "description": "AgentSession",
+      "schema": {
+        "$ref": "#/definitions/AgentSession"
+      }
+    },
+    "AgentSessionList": {
+      "description": "AgentSessionList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/AgentSession"
+        }
+      }
+    },
     "AnnotatedTag": {
       "description": "AnnotatedTag",
       "schema": {
@@ -34010,6 +35474,42 @@
       "description": "CurrentAccessToken represents the currently authenticated access token.",
       "schema": {
         "$ref": "#/definitions/CurrentAccessToken"
+      }
+    },
+    "DependencyAlert": {
+      "description": "DependencyAlert",
+      "schema": {
+        "$ref": "#/definitions/DependencyAlert"
+      }
+    },
+    "DependencyAlertList": {
+      "description": "DependencyAlertList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/DependencyAlert"
+        }
+      }
+    },
+    "DependencyList": {
+      "description": "DependencyList",
+      "schema": {
+        "type": "array",
+        "items": {
+          "$ref": "#/definitions/Dependency"
+        }
+      }
+    },
+    "DependencyUpdates": {
+      "description": "DependencyUpdates",
+      "schema": {
+        "$ref": "#/definitions/DependencyUpdates"
+      }
+    },
+    "DependencyUpdatesRun": {
+      "description": "DependencyUpdatesRun",
+      "schema": {
+        "$ref": "#/definitions/DependencyUpdatesRun"
       }
     },
     "DeployKey": {

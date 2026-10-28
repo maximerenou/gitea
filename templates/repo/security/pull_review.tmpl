@@ -1,0 +1,44 @@
+{{template "base/head" .}}
+<div class="page-content repository security">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		<h2 class="ui header">
+			{{ctx.Locale.Tr "depscan.review.title"}}
+			<div class="sub header">
+				<a href="{{.RepoLink}}/pulls/{{.Pull.Index}}">#{{.Pull.Index}}</a>
+				{{ctx.Locale.Tr "depscan.review.compared" (ShortSha .Review.HeadSHA) (ShortSha .Review.BaseSHA)}}
+				· {{DateUtils.TimeSince .Review.Updated}}
+			</div>
+		</h2>
+		{{if .Review.Error}}
+			<div class="ui error message">{{ctx.Locale.Tr "depscan.review.failed"}}{{if .CanSeeReviewError}} <code>{{.Review.Error}}</code>{{end}}</div>
+		{{end}}
+		<div class="ui segment">
+			<div class="flex-divided-list items-with-main">
+				{{range $f := .Review.Findings}}
+					<div class="item tw-items-center">
+						<div class="item-leading">{{template "repo/security/severity" (dict "Severity" $f.Severity)}}</div>
+						<div class="item-main">
+							<div class="item-title">{{if $f.Summary}}{{$f.Summary}}{{else}}{{$f.VulnID}}{{end}}</div>
+							<div class="item-body flex-text-block">
+								<code>{{$f.Package}} {{$f.Version}}</code>
+								<span>{{$f.Ecosystem}}</span>
+								<span class="tw-text-text-light">{{$f.Manifest}}</span>
+								<a href="https://osv.dev/vulnerability/{{$f.VulnID}}" target="_blank" rel="noopener noreferrer">{{$f.VulnID}}</a>
+								{{if $f.FixedVersions}}<span>{{ctx.Locale.Tr "depscan.fixed_in"}} <code>{{StringUtils.Join $f.FixedVersions ", "}}</code></span>{{end}}
+							</div>
+						</div>
+					</div>
+				{{else}}
+					{{if not .Review.Error}}
+						<div class="empty-placeholder">
+							{{svg "octicon-shield-check" 48}}
+							<h2>{{ctx.Locale.Tr "depscan.review.clean"}}</h2>
+						</div>
+					{{end}}
+				{{end}}
+			</div>
+		</div>
+	</div>
+</div>
+{{template "base/footer" .}}

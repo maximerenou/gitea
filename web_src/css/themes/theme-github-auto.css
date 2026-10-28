@@ -1,0 +1,7 @@
+@import "./theme-github-light.css" (prefers-color-scheme: light);
+@import "./theme-github-dark.css" (prefers-color-scheme: dark);
+
+gitea-theme-meta-info {
+  --theme-display-name: "GitHub Auto";
+  --theme-color-scheme: "auto";
+}

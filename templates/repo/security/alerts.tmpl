@@ -1,0 +1,49 @@
+{{template "base/head" .}}
+<div class="page-content repository security">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		{{template "base/alert" .}}
+		{{template "repo/security/nav" .}}
+		<div class="flex-left-right tw-mb-2">
+			<div class="ui compact small menu">
+				{{range $state := StringUtils.Split "open,fixed,dismissed" ","}}
+					<a class="item {{if eq (print $.State) $state}}active{{end}}" href="?state={{$state}}">{{ctx.Locale.Tr (printf "depscan.state.%s" $state)}}</a>
+				{{end}}
+			</div>
+			<div class="ui compact small menu">
+				<a class="item {{if not .Severity}}active{{end}}" href="?state={{.State}}">{{ctx.Locale.Tr "depscan.all_severities"}}</a>
+				{{range $severity := .Severities}}
+					<a class="item {{if eq $.Severity $severity}}active{{end}}" href="?state={{$.State}}&severity={{$severity}}">{{ctx.Locale.Tr (printf "depscan.severity.%s" $severity)}}</a>
+				{{end}}
+			</div>
+		</div>
+		<div class="ui segment">
+			<div class="flex-divided-list items-with-main">
+				{{range $a := .Alerts}}
+					<div class="item tw-items-center">
+						<div class="item-leading">{{template "repo/security/severity" (dict "Severity" $a.Severity)}}</div>
+						<div class="item-main">
+							<div class="item-title">
+								<a href="{{$.RepoLink}}/security/alerts/{{$a.ID}}">{{if $a.Summary}}{{$a.Summary}}{{else}}{{$a.Title}}{{end}}</a>
+							</div>
+							<div class="item-body flex-text-block">
+								<code>{{$a.Package}} {{$a.Version}}</code>
+								<span>{{$a.Ecosystem}}</span>
+								<span class="tw-text-text-light">{{$a.Manifest}}</span>
+								<span class="tw-text-text-light">{{$a.Title}}</span>
+							</div>
+						</div>
+						<div class="item-trailing">{{DateUtils.TimeSince $a.Created}}</div>
+					</div>
+				{{else}}
+					<div class="empty-placeholder">
+						{{svg "octicon-shield-check" 48}}
+						<h2>{{ctx.Locale.Tr "depscan.no_alerts"}}</h2>
+					</div>
+				{{end}}
+			</div>
+		</div>
+		{{template "base/paginate" dict "Page" .Page}}
+	</div>
+</div>
+{{template "base/footer" .}}

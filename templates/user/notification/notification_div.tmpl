@@ -33,7 +33,7 @@
 						{{if $one.Issue}}
 							{{template "shared/issueicon" $one.Issue}}
 						{{else}}
-							{{svg "octicon-repo" 16 "tw-text-text-light"}}
+							{{svg $one.SubjectIcon 16 "tw-text-text-light"}}
 						{{end}}
 					</div>
 					<a class="notifications-link silenced tw-flex-1" href="{{$one.Link ctx}}">
@@ -46,6 +46,8 @@
 						<div class="tw-text-16 tw-py-0.5">
 							{{if $one.Issue}}
 								{{$one.Issue.Title | ctx.RenderUtils.RenderIssueSimpleTitle}}
+							{{else if $one.Subject}}
+								{{$one.Subject}}
 							{{else}}
 								{{$one.Repository.FullName}}
 							{{end}}

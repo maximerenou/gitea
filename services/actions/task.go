@@ -12,6 +12,7 @@ import (
 
 	runnerv1 "gitea.dev/actionslib/runner/v1"
 	actions_model "gitea.dev/models/actions"
+	agents_model "gitea.dev/models/agents"
 	"gitea.dev/models/db"
 	secret_model "gitea.dev/models/secret"
 	"gitea.dev/modules/actions/jobparser"
@@ -147,6 +148,21 @@ func buildRunnerTask(ctx context.Context, t *actions_model.ActionTask) (*runnerv
 	vars, err := actions_model.GetVariablesOfRun(ctx, t.Job.Run)
 	if err != nil {
 		return nil, nil, fmt.Errorf("GetVariablesOfRun: %w", err)
+	}
+
+	// AGENTS-HOOK: agent jobs only get their own configuration's secret, never the repository's or owner's
+	if agentSecrets, isAgent, err := agents_model.TaskSecrets(ctx, t); err != nil {
+		return nil, nil, fmt.Errorf("agents TaskSecrets: %w", err)
+	} else if isAgent {
+		secrets, vars = agentSecrets, map[string]string{}
+	} else if agentCode, err := agents_model.RunsAgentCode(ctx, t.Job.Run); err != nil { // AGENTS-HOOK: nor CI running an agent's push
+		return nil, nil, fmt.Errorf("agents RunsAgentCode: %w", err)
+	} else if agentCode {
+		secrets, vars = map[string]string{"GITHUB_TOKEN": t.Token, "GITEA_TOKEN": t.Token}, map[string]string{}
+		t.IsForkPullRequest = true // its token is read-only too, the run itself needs no approval
+		if err := actions_model.UpdateTask(ctx, t, "is_fork_pull_request"); err != nil {
+			return nil, nil, fmt.Errorf("UpdateTask: %w", err)
+		}
 	}
 
 	needs, err := findTaskNeeds(ctx, job)

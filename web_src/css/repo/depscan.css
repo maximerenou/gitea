@@ -1,0 +1,14 @@
+.depscan-severity-critical {
+  background: var(--color-red) !important; /* the label color must win over Fomantic's .ui.label */
+  color: var(--color-white) !important;
+}
+
+.depscan-severity-high {
+  background: var(--color-orange) !important;
+  color: var(--color-white) !important;
+}
+
+.depscan-severity-moderate {
+  background: var(--color-yellow) !important;
+  color: var(--color-black) !important;
+}

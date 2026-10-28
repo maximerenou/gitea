@@ -10,6 +10,7 @@ import (
 
 	actions_model "gitea.dev/models/actions"
 	activities_model "gitea.dev/models/activities"
+	agents_model "gitea.dev/models/agents"
 	asymkey_model "gitea.dev/models/asymkey"
 	auth_model "gitea.dev/models/auth"
 	"gitea.dev/models/db"
@@ -88,6 +89,7 @@ func deleteUser(ctx context.Context, u *user_model.User, purge bool) (err error)
 		&issues_model.Stopwatch{UserID: u.ID},
 		&user_model.Setting{UserID: u.ID},
 		&user_model.UserBadge{UserID: u.ID},
+		&agents_model.UserKey{UserID: u.ID}, // AGENTS-HOOK
 		&pull_model.AutoMerge{DoerID: u.ID},
 		&pull_model.ReviewState{UserID: u.ID},
 		&user_model.Redirect{RedirectUserID: u.ID},

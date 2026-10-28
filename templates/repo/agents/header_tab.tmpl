@@ -1,0 +1,5 @@
+{{if and EnableAgents .EnableActions (.Permission.CanRead ctx.Consts.RepoUnitTypeCode) (.Permission.CanRead ctx.Consts.RepoUnitTypeActions) (not .IsEmptyRepo)}}
+	<a class="{{if .PageIsAgents}}active{{end}} item" href="{{.RepoLink}}/agents">
+		{{svg "octicon-sparkle"}} {{ctx.Locale.Tr "agents.title"}}
+	</a>
+{{end}}

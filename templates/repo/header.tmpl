@@ -137,6 +137,9 @@
 						</a>
 					{{end}}
 
+					{{template "repo/agents/header_tab" .}}{{/* AGENTS-HOOK */}}
+					{{template "repo/security/header_tab" .}}{{/* DEPSCAN-HOOK */}}
+
 					{{if .Permission.CanRead ctx.Consts.RepoUnitTypePackages}}
 						<a href="{{.RepoLink}}/packages" class="{{if .IsPackagesPage}}active{{end}} item">
 							{{svg "octicon-package"}} {{ctx.Locale.Tr "packages.title"}}

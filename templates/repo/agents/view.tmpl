@@ -1,0 +1,85 @@
+{{template "base/head" .}}
+<div class="page-content repository agents">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		{{template "base/alert" .}}
+		<div class="flex-left-right tw-mb-4">
+			<div>
+				<h2 class="flex-text-block tw-m-0">
+					{{template "repo/agents/status" (dict "Status" .Session.Status)}}
+					<span>{{.Session.Title}}</span>
+					<span class="tw-text-text-light">#{{.Session.ID}}</span>
+				</h2>
+				<div class="flex-text-block tw-text-text-light tw-mt-2">
+					<span>{{ctx.Locale.Tr (printf "agents.kind.%s" .Session.Kind)}}</span>
+					{{if .Session.Agent}}<code>@{{.Session.Agent.MentionName}}</code>{{end}}
+					<span>{{ctx.Locale.Tr "agents.session.by" .Session.Creator.HomeLink .Session.Creator.GetDisplayName}}</span>
+					{{if .BranchLink}}<a class="flex-text-inline" href="{{.BranchLink}}">{{svg "octicon-git-branch"}}{{.Session.Branch}}</a>{{end}}
+					{{if .PullRequest}}<a class="flex-text-inline" href="{{.PullRequest.Issue.Link}}">{{svg "octicon-git-pull-request"}}#{{.PullRequest.Issue.Index}}</a>{{end}}
+					{{if and .Session.Issue (ne .Session.Kind "task")}}<a class="flex-text-inline" href="{{.Session.Issue.Link}}">{{svg "octicon-comment-discussion"}}#{{.Session.Issue.Index}}</a>{{end}}
+				</div>
+			</div>
+			<div class="flex-text-block">
+				{{if and .CanCancel (not .Session.Status.IsDone)}}
+					<button type="button" class="ui red basic button link-action" data-url="{{.SessionLink}}/cancel" data-modal-confirm="{{ctx.Locale.Tr "agents.session.cancel_confirm"}}">{{svg "octicon-stop"}} {{ctx.Locale.Tr "agents.session.cancel"}}</button>
+				{{else if and .CanInstruct .CanResume}}
+					<button type="button" class="ui basic button link-action" data-url="{{.SessionLink}}/resume">{{svg "octicon-sync"}} {{ctx.Locale.Tr "agents.session.resume"}}</button>
+				{{end}}
+			</div>
+		</div>
+
+		<div class="ui segments">
+			{{range $run := .Runs}}
+				<div class="ui segment agent-run" id="agent-run-{{$run.ID}}">
+					<div class="flex-left-right">
+						<div class="flex-text-block">
+							<span class="agent-run-status" data-run-id="{{$run.ID}}">{{template "repo/agents/status" (dict "Status" $run.Status)}}</span>
+							<strong>{{ctx.Locale.Tr "agents.run.title" $run.ID}}</strong>
+							<span class="tw-text-text-light">{{DateUtils.TimeSince $run.Created}}</span>
+							{{if $.ExistingActionRuns.Contains $run.ActionRunID}}<a class="tw-text-text-light" href="{{$.RepoLink}}/actions/runs/{{$run.ActionRunID}}">{{ctx.Locale.Tr "agents.run.job"}}</a>{{end}}
+							{{with index $.RunUsage $run.ID}}<span class="tw-text-text-light" data-tooltip-content="{{ctx.Locale.Tr "agents.run.usage_help" .CachedInputTokens}}">{{ctx.Locale.Tr "agents.run.usage" .InputTokens .OutputTokens}}</span>{{end}}
+						</div>
+						{{if and $.CanInstruct $run.Status.IsDone (eq $run.TriggerUserID ctx.RootData.SignedUserID)}}
+							<button type="button" class="ui mini basic button link-action" data-url="{{$.SessionLink}}/runs/{{$run.ID}}/retry">{{ctx.Locale.Tr "agents.run.retry"}}</button>
+						{{end}}
+					</div>
+					<details class="tw-mt-2">
+						<summary class="tw-cursor-pointer">{{ctx.Locale.Tr "agents.run.prompt"}}</summary>
+						<pre class="agent-prompt">{{$run.Prompt}}</pre>
+					</details>
+					{{if $run.ReadOnlyReason}}<div class="ui tiny message">{{ctx.Locale.Tr "agents.run.read_only" $run.ReadOnlyReason}}</div>{{end}}
+					{{if $run.Error}}<div class="ui tiny error message">{{$run.Error}}</div>{{end}}
+					<div class="agent-events tw-mt-2" data-run-id="{{$run.ID}}"></div>
+				</div>
+			{{end}}
+		</div>
+
+		<div id="agent-session-events" data-global-init="initAgentSession"
+			data-events-url="{{.SessionLink}}/events"
+			data-live-url="{{.SessionLink}}/live"
+			data-locale-thread="{{ctx.Locale.Tr "agents.event.thread"}}"
+			data-locale-turn="{{ctx.Locale.Tr "agents.event.turn"}}"
+			data-locale-error="{{ctx.Locale.Tr "agents.event.error"}}"
+			data-locale-files="{{ctx.Locale.Tr "agents.event.files"}}"
+			data-locale-plan="{{ctx.Locale.Tr "agents.event.plan"}}"
+			data-locale-reasoning="{{ctx.Locale.Tr "agents.event.reasoning"}}"
+			data-locale-message="{{ctx.Locale.Tr "agents.event.message"}}"
+			data-locale-command="{{ctx.Locale.Tr "agents.event.command"}}"
+			data-locale-search="{{ctx.Locale.Tr "agents.event.search"}}"
+			data-locale-tool="{{ctx.Locale.Tr "agents.event.tool"}}"
+		></div>
+
+		{{if .CanInstruct}}
+			<form class="ui form form-fetch-action ignore-dirty tw-mt-4" action="{{.SessionLink}}/instruct" method="post">
+				<div class="field">
+					<label>{{ctx.Locale.Tr "agents.session.instruct"}}</label>
+					<textarea name="prompt" rows="3" required placeholder="{{ctx.Locale.Tr "agents.session.instruct_placeholder"}}"></textarea>
+				</div>
+				<button type="submit" class="ui primary button">{{ctx.Locale.Tr "agents.session.send"}}</button>
+			</form>
+		{{else if and .IsSigned .Session.Agent}}
+			<p class="tw-mt-4 tw-text-text-light">{{ctx.Locale.Tr "agents.session.need_key" .SettingsLink .Session.Agent.MentionName}}</p>
+		{{end}}
+	</div>
+</div>
+{{template "base/footer" .}}

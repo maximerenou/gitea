@@ -67,6 +67,8 @@
 @import "./repo/issue-label.css";
 @import "./repo/issue-list.css";
 @import "./repo/list-header.css";
+@import "./repo/agents.css"; /* AGENTS-HOOK */
+@import "./repo/depscan.css"; /* DEPSCAN-HOOK */
 @import "./repo/file-view.css";
 @import "./repo/wiki.css";
 @import "./repo/home.css";

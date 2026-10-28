@@ -1,0 +1,10 @@
+{{/* Label: the filter's name, Filters: its options */}}
+<div class="ui dropdown jump item">
+	<span class="text">{{.Label}}</span>
+	{{svg "octicon-triangle-down" 14 "dropdown icon"}}
+	<div class="menu">
+		{{range $filter := .Filters}}
+			<a class="item{{if $filter.Selected}} selected{{end}}" href="{{$filter.Link}}">{{$filter.Label}}</a>
+		{{end}}
+	</div>
+</div>

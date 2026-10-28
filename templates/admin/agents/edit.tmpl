@@ -1,0 +1,21 @@
+{{template "admin/layout_head" (dict "ctxData" . "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">
+			{{.Agent.Name}} <code>@{{.Agent.MentionName}}</code>
+		</h4>
+		<div class="ui attached segment">
+			<form class="ui form form-fetch-action ignore-dirty" action="{{AppSubUrl}}/-/admin/agents/{{.Agent.ID}}" method="post" autocomplete="off">
+				{{template "admin/agents/fields" (dict "Providers" .Providers "OpenAIBaseURL" .OpenAIBaseURL "ReasoningEfforts" .ReasoningEfforts "Agent" .Agent)}}
+				<button type="submit" class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+			</form>
+		</div>
+		<h4 class="ui top attached error header">{{ctx.Locale.Tr "repo.settings.danger_zone"}}</h4>
+		<div class="ui attached error danger segment flex-left-right">
+			<div>
+				<strong>{{ctx.Locale.Tr "agents.admin.delete"}}</strong>
+				<p>{{ctx.Locale.Tr "agents.admin.delete_help"}}</p>
+			</div>
+			<button type="button" class="ui red button link-action" data-url="{{AppSubUrl}}/-/admin/agents/{{.Agent.ID}}/delete" data-modal-confirm="{{ctx.Locale.Tr "agents.admin.delete_confirm"}}">{{ctx.Locale.Tr "agents.admin.delete"}}</button>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}

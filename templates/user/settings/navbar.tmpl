@@ -28,6 +28,11 @@
 		<a class="{{if .PageIsSettingsApplications}}active {{end}}item" href="{{AppSubUrl}}/user/settings/applications">
 			{{ctx.Locale.Tr "settings.applications"}}
 		</a>
+		{{if EnableAgents}}{{/* AGENTS-HOOK */}}
+		<a class="{{if .PageIsSettingsAgents}}active {{end}}item" href="{{AppSubUrl}}/user/settings/agents">
+			{{ctx.Locale.Tr "agents.settings.title"}}
+		</a>
+		{{end}}
 		{{if not ($.UserDisabledFeatures.Contains "manage_ssh_keys" "manage_gpg_keys")}}
 		<a class="{{if .PageIsSettingsKeys}}active {{end}}item" href="{{AppSubUrl}}/user/settings/keys">
 			{{ctx.Locale.Tr "settings.ssh_gpg_keys"}}

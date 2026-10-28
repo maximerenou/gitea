@@ -30,6 +30,11 @@
 				{{svg "octicon-code"}} {{ctx.Locale.Tr "org.code"}}
 			</a>
 			{{end}}
+			{{if and EnableDependencyScanning .IsOrganizationMember}}{{/* DEPSCAN-HOOK */}}
+			<a class="{{if .PageIsOrgSecurity}}active {{end}}item" href="{{$.Org.HomeLink}}/-/security">
+				{{svg "octicon-shield"}} {{ctx.Locale.Tr "depscan.title"}}
+			</a>
+			{{end}}
 			{{if .NumMembers}}
 			<a class="{{if $.PageIsOrgMembers}}active {{end}}item" href="{{$.OrgLink}}/members">
 				{{svg "octicon-person"}} {{ctx.Locale.Tr "org.members"}}

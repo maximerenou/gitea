@@ -17,6 +17,7 @@
 	{{template "repo/issue/sidebar/assignee_list" $.IssuePageMetaData}}
 
 	{{template "repo/issue/sidebar/participant_list" $}}
+	{{template "repo/agents/issue_sidebar" $}}{{/* AGENTS-HOOK */}}
 	{{template "repo/issue/sidebar/watch_notification" $}}
 	{{template "repo/issue/sidebar/stopwatch_timetracker" $}}
 	{{template "repo/issue/sidebar/due_date" $}}

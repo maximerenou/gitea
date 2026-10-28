@@ -1,0 +1,26 @@
+{{/* the status of the scanning and the Security sub-pages */}}
+{{if not .ScanSetting.Enabled}}
+	<div class="ui warning message">
+		{{ctx.Locale.Tr "depscan.disabled"}}
+		{{if .CanAdmin}}<a href="{{.RepoLink}}/settings/dependency-scanning">{{ctx.Locale.Tr "depscan.enable"}}</a>{{end}}
+	</div>
+{{else if .ScanSetting.LastScanError}}
+	<div class="ui error message">{{ctx.Locale.Tr "depscan.scan_failed"}} <code>{{.ScanSetting.LastScanError}}</code></div>
+{{end}}
+<div class="flex-left-right tw-mb-4" data-global-init="initSecurityLive" data-live-url="{{.RepoLink}}/security/live">
+	<div class="ui secondary pointing menu tw-m-0">
+		<a class="item {{if not .PageIsSecurityDependencies}}active{{end}}" href="{{.RepoLink}}/security">
+			{{ctx.Locale.Tr "depscan.alerts"}}
+			{{range $severity := .Severities}}{{with index $.OpenCounts $severity}}{{template "repo/security/severity" (dict "Severity" $severity)}}<span class="tw-ml-1 tw-mr-2">{{.}}</span>{{end}}{{end}}
+		</a>
+		<a class="item {{if .PageIsSecurityDependencies}}active{{end}}" href="{{.RepoLink}}/security/dependencies">{{ctx.Locale.Tr "depscan.dependencies"}}</a>
+	</div>
+	{{if .ScanSetting.Enabled}}
+		<div class="flex-text-block">
+			<span class="tw-text-text-light">
+				{{if .ScanSetting.LastScanUnix}}{{ctx.Locale.Tr "depscan.last_scan" (DateUtils.TimeSince .ScanSetting.LastScanUnix) .ScanSetting.LastScanDependencies}}{{else}}{{ctx.Locale.Tr "depscan.never_scanned"}}{{end}}
+			</span>
+			<button type="button" class="ui mini basic button link-action" data-url="{{.RepoLink}}/security/scan">{{svg "octicon-sync"}} {{ctx.Locale.Tr "depscan.scan_now"}}</button>
+		</div>
+	{{end}}
+</div>

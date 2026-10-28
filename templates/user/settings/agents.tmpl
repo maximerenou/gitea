@@ -1,0 +1,62 @@
+{{template "user/settings/layout_head" (dict "pageClass" "user settings agents")}}
+	<div class="user-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.settings.title"}}</h4>
+		<div class="ui attached segment">
+			<p>{{ctx.Locale.Tr "agents.settings.description"}}</p>
+		</div>
+		{{range $view := .Agents}}
+			{{$agent := $view.Agent}}
+			<div class="ui attached segment">
+				<div class="flex-left-right">
+					<div class="flex-text-block">
+						{{ctx.AvatarUtils.Avatar $agent.Bot 28}}
+						<strong>{{$agent.Name}}</strong>
+						<code>@{{$agent.MentionName}}</code>
+						<span class="tw-text-text-light">{{$agent.BaseURL}} · {{$agent.Model}}</span>
+						{{if $agent.IsDisabled}}<span class="ui basic label">{{ctx.Locale.Tr "agents.admin.disabled_label"}}</span>{{end}}
+					</div>
+					{{if and $view.Key $agent.IsDisabled}}
+						<button type="button" class="ui compact mini red basic button link-action" data-url="{{AppSubUrl}}/user/settings/agents/{{$agent.ID}}/delete" data-modal-confirm="{{ctx.Locale.Tr "agents.settings.key_delete_confirm"}}">{{ctx.Locale.Tr "agents.settings.key_delete"}}</button>
+					{{else if $view.Key}}
+						<div class="flex-text-block">
+							{{if not $view.Key.LastCheckUnix}}
+								<span class="tw-text-text-light">{{ctx.Locale.Tr "agents.settings.never_tested"}}</span>
+							{{else if $view.Key.LastCheckError}}
+								<span class="tw-text-red" data-tooltip-content="{{$view.Key.LastCheckError}}">{{svg "octicon-x-circle" 14}} {{ctx.Locale.Tr "agents.settings.last_test_failed" (DateUtils.TimeSince $view.Key.LastCheckUnix)}}</span>
+							{{else}}
+								<span class="tw-text-green">{{svg "octicon-check-circle" 14}} {{ctx.Locale.Tr "agents.settings.last_test_passed" (DateUtils.TimeSince $view.Key.LastCheckUnix)}}</span>
+							{{end}}
+							<button type="button" class="ui compact mini button link-action" data-url="{{AppSubUrl}}/user/settings/agents/{{$agent.ID}}/test">{{ctx.Locale.Tr "agents.settings.test"}}</button>
+							<button type="button" class="ui compact mini red basic button link-action" data-url="{{AppSubUrl}}/user/settings/agents/{{$agent.ID}}/delete" data-modal-confirm="{{ctx.Locale.Tr "agents.settings.key_delete_confirm"}}">{{ctx.Locale.Tr "agents.settings.key_delete"}}</button>
+						</div>
+					{{end}}
+				</div>
+				{{if $view.Usage}}
+					<p class="tw-text-text-light tw-mt-2">{{ctx.Locale.Tr "agents.usage.mine" $view.Usage.Runs $view.Usage.InputTokens $view.Usage.OutputTokens}}</p>
+				{{end}}
+				{{if $agent.IsDisabled}}
+					<p class="tw-text-text-light tw-mt-2">{{ctx.Locale.Tr "agents.settings.disabled_help"}}</p>
+				{{else}}
+					<form class="ui form form-fetch-action ignore-dirty tw-mt-4" action="{{AppSubUrl}}/user/settings/agents/{{$agent.ID}}" method="post" autocomplete="off">
+						<div class="{{if $agent.AllowModelOverride}}two {{end}}fields">
+							<div class="field">
+								<label>{{ctx.Locale.Tr "agents.settings.api_key"}}</label>
+								<input name="api_key" type="password" autocomplete="new-password" {{if not $view.Key}}required{{end}} placeholder="{{if $view.Key}}{{ctx.Locale.Tr "agents.settings.api_key_keep"}}{{end}}">
+							</div>
+							{{if $agent.AllowModelOverride}}
+								<div class="field">
+									<label>{{ctx.Locale.Tr "agents.settings.model"}}</label>
+									<input name="model" maxlength="255" placeholder="{{$agent.Model}}" value="{{if $view.Key}}{{$view.Key.Model}}{{end}}">
+								</div>
+							{{end}}
+						</div>
+						<p class="help">{{ctx.Locale.Tr "agents.settings.api_key_help"}}</p>
+						<button type="submit" class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+					</form>
+				{{end}}
+			</div>
+		{{else}}
+			<div class="ui attached segment">{{ctx.Locale.Tr "agents.settings.no_agents"}}</div>
+		{{end}}
+	</div>
+{{template "user/settings/layout_footer" .}}

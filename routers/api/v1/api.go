@@ -86,6 +86,8 @@ import (
 	"gitea.dev/modules/web/middleware"
 	"gitea.dev/routers/api/v1/activitypub"
 	"gitea.dev/routers/api/v1/admin"
+	"gitea.dev/routers/api/v1/agents"
+	"gitea.dev/routers/api/v1/depscan"
 	"gitea.dev/routers/api/v1/misc"
 	"gitea.dev/routers/api/v1/notify"
 	"gitea.dev/routers/api/v1/org"
@@ -970,6 +972,7 @@ func Routes() *web.Router {
 	m.AfterRouting(verifyAuthWithOptionsAPI(&common.VerifyOptions{
 		SignInRequired: setting.Service.RequireSignInViewStrict,
 	}))
+	m.AfterRouting(agents.DenyAgentBots) // AGENTS-HOOK
 
 	addActionsRoutes := func(
 		m *web.Router,
@@ -1022,6 +1025,7 @@ func Routes() *web.Router {
 		// Misc (public accessible)
 		m.Group("", func() {
 			m.Get("/version", misc.Version)
+			agents.RegisterRoutes(m, reqToken()) // AGENTS-HOOK
 			m.Get("/signing-key.gpg", misc.SigningKeyGPG)
 			m.Get("/signing-key.pub", misc.SigningKeySSH)
 			m.Post("/markup", reqToken(), bind(api.MarkupOption{}), misc.Markup)
@@ -1251,6 +1255,9 @@ func Routes() *web.Router {
 
 			m.Group("/{username}/{reponame}", func() {
 				m.Get("/compare/*", reqRepoReader(unit.TypeCode), repo.CompareDiff)
+				agents.RegisterRepoRoutes(m, reqToken(), reqRepoReader(unit.TypeCode), reqRepoReader(unit.TypePullRequests)) // AGENTS-HOOK
+
+				depscan.RegisterRepoRoutes(m, reqToken(), reqRepoWriter(unit.TypeCode), reqAdmin()) // DEPSCAN-HOOK
 
 				m.Combo("").Get(reqAnyRepoReader(), repo.Get).
 					Delete(reqToken(), reqRepoDangerZone(), repo.Delete).

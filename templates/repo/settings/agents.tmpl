@@ -1,0 +1,72 @@
+{{template "repo/settings/layout_head" (dict "pageClass" "repository settings agents")}}
+	<div class="repo-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.title"}}</h4>
+		<div class="ui attached segment">
+			<p>{{ctx.Locale.Tr "agents.repo_settings.description"}}</p>
+			<form class="ui form form-fetch-action ignore-dirty" action="{{.RepoLink}}/settings/agents" method="post">
+				<div class="field">
+					<div class="ui checkbox">
+						<input type="checkbox" name="enabled" {{if .RepoSetting.Enabled}}checked{{end}}>
+						<label>{{ctx.Locale.Tr "agents.repo_settings.enabled"}}</label>
+					</div>
+				</div>
+				{{if .Agents}}
+					<div class="grouped fields">
+						<div class="field">
+							<div class="ui radio checkbox">
+								<input type="radio" name="agents" value="all" {{if not .AllowedAgentIDs}}checked{{end}}>
+								<label>{{ctx.Locale.Tr "agents.repo_settings.all"}}</label>
+							</div>
+						</div>
+						<div class="field">
+							<div class="ui radio checkbox">
+								<input type="radio" name="agents" value="selected" {{if .AllowedAgentIDs}}checked{{end}}>
+								<label>{{ctx.Locale.Tr "agents.repo_settings.selected"}}</label>
+							</div>
+						</div>
+						{{range $agent := .Agents}}
+							<div class="field tw-ml-6">
+								<div class="ui checkbox">
+									<input type="checkbox" name="agent_ids" value="{{$agent.ID}}" {{if SliceUtils.Contains $.AllowedAgentIDs $agent.ID}}checked{{end}}>
+									<label>{{$agent.Name}} <code>@{{$agent.MentionName}}</code></label>
+								</div>
+							</div>
+						{{end}}
+					</div>
+				{{else}}
+					<p class="tw-text-text-light">{{ctx.Locale.Tr "agents.repo_settings.no_agents"}}</p>
+				{{end}}
+				{{if .Agents}}
+					<h5 class="ui dividing header">{{ctx.Locale.Tr "agents.repo_settings.review"}}</h5>
+					<p class="tw-text-text-light">{{ctx.Locale.Tr "agents.repo_settings.review_help"}}</p>
+					{{if .ReviewProblem}}<div class="ui warning message">{{.ReviewProblem}}</div>{{end}}
+					<div class="field">
+						<label for="review_agent_id">{{ctx.Locale.Tr "agents.repo_settings.review_agent"}}</label>
+						<select id="review_agent_id" name="review_agent_id" class="ui dropdown">
+							<option value="0">{{ctx.Locale.Tr "agents.repo_settings.review_off"}}</option>
+							{{range $agent := .Agents}}<option value="{{$agent.ID}}" {{if eq $agent.ID $.RepoSetting.ReviewAgentID}}selected{{end}}>{{$agent.Name}} @{{$agent.MentionName}}</option>{{end}}
+						</select>
+					</div>
+					{{if .Reviewer}}
+						<div class="field">
+							<p>{{ctx.Locale.Tr "agents.repo_settings.reviewer" .Reviewer.Name}}</p>
+							{{if ne .Reviewer.ID ctx.RootData.SignedUserID}}
+								<div class="ui checkbox">
+									<input type="checkbox" name="review_with_my_key" id="review_with_my_key">
+									<label for="review_with_my_key">{{ctx.Locale.Tr "agents.repo_settings.review_with_my_key"}}</label>
+								</div>
+							{{end}}
+						</div>
+					{{end}}
+					<div class="field">
+						<div class="ui checkbox">
+							<input type="checkbox" name="review_everyone" id="review_everyone" {{if .RepoSetting.ReviewEveryone}}checked{{end}}>
+							<label for="review_everyone">{{ctx.Locale.Tr "agents.repo_settings.review_everyone"}}</label>
+						</div>
+					</div>
+				{{end}}
+				<button type="submit" class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+			</form>
+		</div>
+	</div>
+{{template "repo/settings/layout_footer" .}}

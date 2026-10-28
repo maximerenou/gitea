@@ -109,6 +109,12 @@
 						{{svg "octicon-bell"}}
 						{{ctx.Locale.Tr "notification.subscriptions"}}
 					</a>
+					{{if EnableAgents}}{{/* AGENTS-HOOK */}}
+					<a class="item" href="{{AppSubUrl}}/user/agents">
+						{{svg "octicon-sparkle"}}
+						{{ctx.Locale.Tr "agents.mine.title"}}
+					</a>
+					{{end}}
 					<a class="{{if .PageIsUserSettings}}active {{end}}item" href="{{AppSubUrl}}/user/settings">
 						{{svg "octicon-tools"}}
 						{{ctx.Locale.Tr "your_settings"}}

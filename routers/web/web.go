@@ -29,7 +29,9 @@ import (
 	"gitea.dev/modules/web/types"
 	"gitea.dev/routers/common"
 	"gitea.dev/routers/web/admin"
+	"gitea.dev/routers/web/agents"
 	"gitea.dev/routers/web/auth"
+	"gitea.dev/routers/web/depscan"
 	"gitea.dev/routers/web/devtest"
 	"gitea.dev/routers/web/explore"
 	"gitea.dev/routers/web/feed"
@@ -754,6 +756,8 @@ func registerWebRoutes(m *web.Router, webAuth *AuthMiddleware) {
 			m.Get("", user_setting.BlockedUsers)
 			m.Post("", web.Bind[*forms.BlockUserForm](), user_setting.BlockedUsersPost)
 		})
+
+		agents.RegisterUserSettingsRoutes(m) // AGENTS-HOOK
 	}, reqSignIn, user_setting.SettingsCtxData)
 
 	m.Group("/user", func() {
@@ -907,6 +911,8 @@ func registerWebRoutes(m *web.Router, webAuth *AuthMiddleware) {
 			addSettingsScopedWorkflowsRoutes()
 			m.Get("/job_queue", shared_actions.JobQueue)
 		})
+
+		agents.RegisterAdminRoutes(m) // AGENTS-HOOK
 	}, adminReq, ctxDataSet(reqctx.ContextData{"EnableOAuth2": setting.OAuth2.Enabled, "EnablePackages": setting.Packages.Enabled}))
 	// ***** END: Admin *****
 
@@ -1616,6 +1622,9 @@ func registerWebRoutes(m *web.Router, webAuth *AuthMiddleware) {
 		})
 	}, optSignIn, context.RepoAssignment, repo.MustBeNotEmpty, reqRepoActionsReader, actions.MustEnableActions)
 	// end "/{username}/{reponame}/actions"
+
+	agents.RegisterRoutes(m, reqSignIn)  // AGENTS-HOOK
+	depscan.RegisterRoutes(m, reqSignIn) // DEPSCAN-HOOK
 
 	m.Group("/{username}/{reponame}/wiki", func() {
 		m.Combo("").

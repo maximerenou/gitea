@@ -43,7 +43,7 @@ func ListNotifications(ctx *context.APIContext) {
 	//   collectionFormat: multi
 	//   items:
 	//     type: string
-	//     enum: [issue,pull,commit,repository]
+	//     enum: [issue,pull,commit,repository,agentsession,securityalert]
 	// - name: since
 	//   in: query
 	//   description: Only show notifications updated after the given time. This is a timestamp in RFC 3339 format

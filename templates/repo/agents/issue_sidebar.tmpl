@@ -1,0 +1,53 @@
+{{if or .AgentSessions .AgentRepoLiveURL}}
+	<div id="agent-issue-sessions" {{if or .AgentLiveURLs .AgentRepoLiveURL}}data-global-init="initAgentIssueLive"{{end}} data-live-urls="{{.AgentLiveURLs}}" data-repo-live-url="{{.AgentRepoLiveURL}}">
+		{{if .AgentSessions}}
+			<div class="divider"></div>
+			<div class="ui list">
+				<span class="text"><strong>{{ctx.Locale.Tr "agents.sessions.title"}}</strong></span>
+				{{range $s := .AgentSessions}}
+					<a class="item flex-text-block tw-mt-2" href="{{$s.Link}}">
+						{{template "repo/agents/status" (dict "Status" $s.Status)}}
+						{{if $s.Agent}}<span>@{{$s.Agent.MentionName}}</span>{{end}}
+						<span class="tw-text-text-light">{{ctx.Locale.Tr "agents.session.view"}}</span>
+					</a>
+				{{end}}
+			</div>
+		{{end}}
+	</div>
+{{end}}
+{{if .AgentReviewAgents}}
+	<div class="divider"></div>
+	<form class="ui form form-fetch-action ignore-dirty" action="{{.AgentReviewLink}}" method="post">
+		<span class="text"><strong>{{ctx.Locale.Tr "agents.review.title"}}</strong></span>
+		<div class="flex-text-block tw-mt-2">
+			<select name="agent_id" class="ui dropdown tw-flex-1" aria-label="{{ctx.Locale.Tr "agents.session.agent"}}">
+				{{range .AgentReviewAgents}}<option value="{{.ID}}">@{{.MentionName}}</option>{{end}}
+			</select>
+			<button type="submit" class="ui small button">{{svg "octicon-code-review"}} {{ctx.Locale.Tr "agents.review.submit"}}</button>
+		</div>
+	</form>
+{{end}}
+{{if .AgentMergeAgents}}
+	<div class="divider"></div>
+	<form class="ui form form-fetch-action ignore-dirty" action="{{.AgentMergeLink}}" method="post">
+		<span class="text"><strong>{{ctx.Locale.Tr "agents.merge.title"}}</strong></span>
+		<p class="tw-text-text-light tw-my-2">{{ctx.Locale.Tr "agents.merge.help"}}</p>
+		<div class="field">
+			<select name="agent_id" class="ui dropdown" aria-label="{{ctx.Locale.Tr "agents.session.agent"}}">
+				{{range .AgentMergeAgents}}<option value="{{.ID}}">@{{.MentionName}}</option>{{end}}
+			</select>
+		</div>
+		<div class="field">
+			<select name="merge_style" class="ui dropdown" aria-label="{{ctx.Locale.Tr "agents.merge.style"}}">
+				{{range .AgentMergeStyles}}<option value="{{.Style}}" {{if .Default}}selected{{end}}>{{ctx.Locale.Tr .Label}}</option>{{end}}
+			</select>
+		</div>
+		<div class="field">
+			<div class="ui checkbox">
+				<input type="checkbox" name="review" id="agent-merge-review">
+				<label for="agent-merge-review">{{ctx.Locale.Tr "agents.merge.review"}}</label>
+			</div>
+		</div>
+		<button type="submit" class="ui small primary button tw-w-full">{{svg "octicon-git-merge"}} {{ctx.Locale.Tr "agents.merge.submit"}}</button>
+	</form>
+{{end}}

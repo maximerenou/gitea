@@ -26,17 +26,20 @@ import (
 	"gitea.dev/modules/web"
 	"gitea.dev/modules/web/routing"
 	actions_router "gitea.dev/routers/api/actions"
+	agents_router "gitea.dev/routers/api/agents"
 	packages_router "gitea.dev/routers/api/packages"
 	apiv1 "gitea.dev/routers/api/v1"
 	"gitea.dev/routers/common"
 	"gitea.dev/routers/private"
 	web_routers "gitea.dev/routers/web"
 	actions_service "gitea.dev/services/actions"
+	agents_service "gitea.dev/services/agents"
 	asymkey_service "gitea.dev/services/asymkey"
 	"gitea.dev/services/auth"
 	"gitea.dev/services/auth/source/oauth2"
 	"gitea.dev/services/automerge"
 	"gitea.dev/services/cron"
+	depscan_service "gitea.dev/services/depscan"
 	feed_service "gitea.dev/services/feed"
 	gitproxy_service "gitea.dev/services/gitproxy"
 	indexer_service "gitea.dev/services/indexer"
@@ -165,6 +168,8 @@ func InitWebInstalled(ctx context.Context) {
 	mustInit(svg.Init)
 
 	mustInitCtx(ctx, actions_service.Init)
+	mustInitCtx(ctx, agents_service.Init)  // AGENTS-HOOK
+	mustInitCtx(ctx, depscan_service.Init) // DEPSCAN-HOOK
 
 	mustInit(repo_service.InitLicenseClassifier)
 
@@ -204,6 +209,10 @@ func NormalRoutes() *web.Router {
 		r.Mount(prefix, actions_router.ArtifactsRoutes(prefix))
 		prefix = actions_router.ArtifactV4RouteBase
 		r.Mount(prefix, actions_router.ArtifactsV4Routes(prefix))
+	}
+
+	if agents_service.IsEnabled() {
+		r.Mount("/api/agents", agents_router.JobRoutes()) // AGENTS-HOOK
 	}
 
 	r.NotFound(func(w http.ResponseWriter, req *http.Request) {

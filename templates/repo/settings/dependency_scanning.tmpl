@@ -1,0 +1,116 @@
+{{template "repo/settings/layout_head" (dict "pageClass" "repository settings dependency-scanning")}}
+	<div class="repo-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "depscan.title"}}</h4>
+		<div class="ui attached segment">
+			<p>{{ctx.Locale.Tr "depscan.settings.description"}}</p>
+			<form class="ui form form-fetch-action ignore-dirty" action="{{.RepoLink}}/settings/dependency-scanning" method="post">
+				<div class="field">
+					<div class="ui checkbox">
+						<input type="checkbox" name="enabled" {{if .ScanSetting.Enabled}}checked{{end}}>
+						<label>{{ctx.Locale.Tr "depscan.settings.enabled"}}</label>
+					</div>
+				</div>
+				<div class="field">
+					<label for="notify_severity">{{ctx.Locale.Tr "depscan.settings.notify"}}</label>
+					<select id="notify_severity" name="notify_severity" class="ui dropdown">
+						{{range $severity := .Thresholds}}<option value="{{$severity}}" {{if eq $severity $.NotifySeverity}}selected{{end}}>{{ctx.Locale.Tr (printf "depscan.threshold.%s" $severity)}}</option>{{end}}
+					</select>
+				</div>
+				<h5 class="ui dividing header">{{ctx.Locale.Tr "depscan.review.title"}}</h5>
+				<div class="field">
+					<label for="review_fail_severity">{{ctx.Locale.Tr "depscan.settings.review_fail"}}</label>
+					<select id="review_fail_severity" name="review_fail_severity" class="ui dropdown">
+						{{range $severity := .Thresholds}}<option value="{{$severity}}" {{if eq $severity $.ReviewFailSeverity}}selected{{end}}>{{ctx.Locale.Tr (printf "depscan.threshold.%s" $severity)}}</option>{{end}}
+					</select>
+				</div>
+				<div class="field">
+					<label for="review_allow_list">{{ctx.Locale.Tr "depscan.settings.review_allow"}}</label>
+					<textarea id="review_allow_list" name="review_allow_list" rows="2" placeholder="GHSA-xxxx-xxxx-xxxx">{{StringUtils.Join .ScanSetting.ReviewAllowList "\n"}}</textarea>
+				</div>
+				{{if .UpdateAgents}}
+					<h5 class="ui dividing header">{{ctx.Locale.Tr "depscan.updates.title"}}</h5>
+					<p class="tw-text-text-light">{{ctx.Locale.Tr "depscan.updates.help"}}</p>
+					{{if and .ScanSetting.UpdatesAgentID .ScanSetting.UpdatesLastError}}
+						<div class="ui error message">
+							<p>{{ctx.Locale.Tr "depscan.updates.last_error"}}</p>
+							<p>{{.ScanSetting.UpdatesLastError}}</p>
+						</div>
+					{{end}}
+					<div class="field">
+						<label for="updates_agent_id">{{ctx.Locale.Tr "depscan.updates.agent"}}</label>
+						<select id="updates_agent_id" name="updates_agent_id" class="ui dropdown">
+							<option value="0">{{ctx.Locale.Tr "depscan.updates.off"}}</option>
+							{{range $agent := .UpdateAgents}}<option value="{{$agent.ID}}" {{if eq $agent.ID $.ScanSetting.UpdatesAgentID}}selected{{end}}>{{$agent.Name}} @{{$agent.MentionName}}{{if $agent.IsDisabled}} ({{ctx.Locale.Tr "disabled"}}){{end}}</option>{{end}}
+						</select>
+					</div>
+					{{if .Updater}}
+						<div class="field">
+							<p>{{ctx.Locale.Tr "depscan.updates.updater" .Updater.Name}}</p>
+							{{if ne .Updater.ID ctx.RootData.SignedUserID}}
+								<p class="tw-text-text-light">{{ctx.Locale.Tr "depscan.updates.take_over"}}</p>
+								<div class="ui checkbox">
+									<input type="checkbox" name="updates_with_my_key" id="updates_with_my_key">
+									<label for="updates_with_my_key">{{ctx.Locale.Tr "agents.repo_settings.review_with_my_key"}}</label>
+								</div>
+							{{end}}
+						</div>
+					{{end}}
+					<div class="field">
+						<label for="updates_interval">{{ctx.Locale.Tr "depscan.updates.interval"}}</label>
+						<select id="updates_interval" name="updates_interval" class="ui dropdown">
+							{{range .UpdatesIntervals}}<option value="{{.}}" {{if or (eq . $.ScanSetting.UpdatesInterval) (and (not $.ScanSetting.UpdatesInterval) (eq . "weekly"))}}selected{{end}}>{{ctx.Locale.Tr (printf "depscan.updates.interval.%s" .)}}</option>{{end}}
+						</select>
+					</div>
+					<div class="field">
+						<label for="updates_scope">{{ctx.Locale.Tr "depscan.updates.scope"}}</label>
+						<select id="updates_scope" name="updates_scope" class="ui dropdown">
+							{{range $scope := .UpdatesScopes}}<option value="{{$scope}}" {{if eq $scope $.UpdatesScope}}selected{{end}}>{{ctx.Locale.Tr (printf "depscan.updates.scope.%s" $scope)}}</option>{{end}}
+						</select>
+					</div>
+					<div class="field">
+						<div class="ui checkbox">
+							<input type="checkbox" name="updates_on_alert" id="updates_on_alert" {{if .ScanSetting.UpdatesOnAlert}}checked{{end}}>
+							<label for="updates_on_alert">{{ctx.Locale.Tr "depscan.updates.on_alert"}}</label>
+						</div>
+					</div>
+					<div class="field">
+						<div class="ui checkbox">
+							<input type="checkbox" name="updates_major" id="updates_major" {{if .ScanSetting.UpdatesMajor}}checked{{end}}>
+							<label for="updates_major">{{ctx.Locale.Tr "depscan.updates.major"}}</label>
+						</div>
+					</div>
+					<div class="field">
+						<label for="updates_ignore">{{ctx.Locale.Tr "depscan.updates.ignore"}}</label>
+						<textarea id="updates_ignore" name="updates_ignore" rows="3" placeholder="@types/*">{{StringUtils.Join .ScanSetting.UpdatesIgnore "\n"}}</textarea>
+					</div>
+				{{end}}
+				<button type="submit" class="ui primary button">{{ctx.Locale.Tr "save"}}</button>
+			</form>
+			{{if and .ScanSetting.Enabled .ScanSetting.UpdatesAgentID}}
+				<form class="form-fetch-action tw-mt-4" action="{{.RepoLink}}/settings/dependency-scanning/update" method="post">
+					<button type="submit" class="ui button">{{svg "octicon-sync"}} {{ctx.Locale.Tr "depscan.updates.now"}}</button>
+				</form>
+			{{end}}
+			{{if and .UpdateAgents .ScanSetting.UpdatesRefused}}
+				<h5 class="ui dividing header">{{ctx.Locale.Tr "depscan.updates.refused"}}</h5>
+				<p class="tw-text-text-light">{{ctx.Locale.Tr "depscan.updates.refused_help"}}</p>
+				<div class="flex-divided-list items-with-main">
+					{{range $refused := .ScanSetting.UpdatesRefused}}
+						<div class="item tw-items-center">
+							<div class="item-main flex-text-block">
+								<code>{{$refused.Package}} {{$refused.Version}}</code>
+								<span class="tw-text-text-light">{{$refused.Ecosystem}}</span>
+							</div>
+							<form class="item-trailing form-fetch-action" action="{{$.RepoLink}}/settings/dependency-scanning/refused/remove" method="post">
+								<input type="hidden" name="ecosystem" value="{{$refused.Ecosystem}}">
+								<input type="hidden" name="package" value="{{$refused.Package}}">
+								<input type="hidden" name="version" value="{{$refused.Version}}">
+								<button type="submit" class="ui tiny basic button">{{ctx.Locale.Tr "remove"}}</button>
+							</form>
+						</div>
+					{{end}}
+				</div>
+			{{end}}
+		</div>
+	</div>
+{{template "repo/settings/layout_footer" .}}

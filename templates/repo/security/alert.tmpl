@@ -1,0 +1,72 @@
+{{template "base/head" .}}
+<div class="page-content repository security">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		{{template "base/alert" .}}
+		<div class="flex-left-right tw-mb-4">
+			<div>
+				<h2 class="flex-text-block tw-m-0">
+					{{template "repo/security/severity" (dict "Severity" .Alert.Severity)}}
+					<span>{{if .Alert.Summary}}{{.Alert.Summary}}{{else}}{{.Alert.Title}}{{end}}</span>
+				</h2>
+				<div class="flex-text-block tw-text-text-light tw-mt-2">
+					<span class="ui mini basic label">{{ctx.Locale.Tr (printf "depscan.state.%s" .Alert.State)}}</span>
+					<code>{{.Alert.VulnID}}</code>
+					{{range $alias := .Alert.Aliases}}<code>{{$alias}}</code>{{end}}
+					{{if .Alert.Score}}<span>CVSS {{.Alert.Score}}</span>{{end}}
+				</div>
+			</div>
+			<div class="flex-text-block">
+				{{if eq .Alert.State "dismissed"}}
+					<button type="button" class="ui basic button link-action" data-url="{{.RepoLink}}/security/alerts/{{.Alert.ID}}/reopen">{{ctx.Locale.Tr "depscan.reopen"}}</button>
+				{{end}}
+			</div>
+		</div>
+
+		<div class="ui attached segment">
+			<table class="ui very basic table unstackable">
+				<tbody>
+					<tr><td class="tw-w-1/4">{{ctx.Locale.Tr "depscan.package"}}</td><td><code>{{.Alert.Package}}</code> ({{.Alert.Ecosystem}})</td></tr>
+					<tr><td>{{ctx.Locale.Tr "depscan.affected_version"}}</td><td><code>{{.Alert.Version}}</code></td></tr>
+					<tr><td>{{ctx.Locale.Tr "depscan.manifest"}}</td><td><a href="{{.RepoLink}}/src/branch/{{PathEscapeSegments .Repository.DefaultBranch}}/{{PathEscapeSegments .Alert.Manifest}}">{{.Alert.Manifest}}</a></td></tr>
+					<tr><td>{{ctx.Locale.Tr "depscan.fixed_in"}}</td><td>{{range $v := .Alert.FixedVersions}}<code>{{$v}}</code> {{else}}{{ctx.Locale.Tr "depscan.no_fix"}}{{end}}</td></tr>
+					{{if .DismissedBy}}<tr><td>{{ctx.Locale.Tr "depscan.dismissed_by"}}</td><td><a href="{{.DismissedBy.HomeLink}}">{{.DismissedBy.Name}}</a>{{if .Alert.DismissedReason}}: {{.Alert.DismissedReason}}{{end}}</td></tr>{{end}}
+				</tbody>
+			</table>
+		</div>
+		{{if .Alert.Details}}
+			<div class="ui attached segment markup">{{ctx.RenderUtils.MarkdownToHtml .Alert.Details}}</div>
+		{{end}}
+		{{if .Alert.References}}
+			<div class="ui attached segment">
+				<strong>{{ctx.Locale.Tr "depscan.references"}}</strong>
+				<ul>{{range $ref := .Alert.References}}<li><a href="{{$ref}}" target="_blank" rel="noopener noreferrer nofollow">{{$ref}}</a></li>{{end}}</ul>
+			</div>
+		{{end}}
+
+		{{if eq .Alert.State "open"}}
+			<div class="ui segment tw-mt-4">
+				{{if .Agents}}
+					<form class="ui form form-fetch-action ignore-dirty tw-mb-4" action="{{.RepoLink}}/security/alerts/{{.Alert.ID}}/fix" method="post">
+						<div class="inline fields tw-m-0">
+							<div class="field">
+								<select class="ui dropdown" name="agent_id">
+									{{range $agent := .Agents}}<option value="{{$agent.ID}}">{{$agent.Name}} (@{{$agent.MentionName}})</option>{{end}}
+								</select>
+							</div>
+							<button type="submit" class="ui primary button">{{svg "octicon-sparkle"}} {{ctx.Locale.Tr "depscan.fix_with_agent"}}</button>
+						</div>
+						<p class="help">{{ctx.Locale.Tr "depscan.fix_with_agent_help"}}</p>
+					</form>
+				{{end}}
+				<form class="ui form form-fetch-action ignore-dirty" action="{{.RepoLink}}/security/alerts/{{.Alert.ID}}/dismiss" method="post">
+					<div class="inline fields tw-m-0">
+						<div class="field"><input name="reason" maxlength="1024" required placeholder="{{ctx.Locale.Tr "depscan.dismiss_reason"}}"></div>
+						<button type="submit" class="ui basic button">{{ctx.Locale.Tr "depscan.dismiss"}}</button>
+					</div>
+				</form>
+			</div>
+		{{end}}
+	</div>
+</div>
+{{template "base/footer" .}}

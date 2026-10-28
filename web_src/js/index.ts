@@ -42,6 +42,8 @@ import {initRepoWiki} from './features/repo-wiki.ts';
 import {initRepository, initBranchSelectorTabs} from './features/repo-legacy.ts';
 import {initCaptcha} from './features/captcha.ts';
 import {initRepositoryActions} from './features/repo-actions.ts';
+import {initRepositoryAgents} from './features/repo-agents.ts'; // AGENTS-HOOK
+import {initRepositorySecurity} from './features/repo-security.ts'; // DEPSCAN-HOOK
 import {initGlobalTooltips} from './modules/tippy.ts';
 import {initGiteaFomantic} from './modules/fomantic.ts';
 import {initRepoIssueList} from './features/repo-issue-list.ts';
@@ -145,6 +147,8 @@ const initPerformanceTracer = callInitFunctions([
   initRepoWiki,
   initRepository,
   initRepositoryActions,
+  initRepositoryAgents, // AGENTS-HOOK
+  initRepositorySecurity, // DEPSCAN-HOOK
   initRepositorySearch,
   initRepoContributors,
   initRepoCodeFrequency,

@@ -135,6 +135,7 @@ EDITORCONFIG_FILES := templates .github/workflows options/locale/locale_en-US.js
 GO_SOURCES := $(wildcard *.go)
 GO_SOURCES += $(shell find $(GO_DIRS) -type f -name "*.go")
 GO_SOURCES += $(GENERATED_GO_DEST)
+GO_SOURCES += services/agents/driver.mjs # AGENTS-HOOK: embedded in the binary
 
 ESLINT_CONCURRENCY ?= 2
 ESLINT_ARGS := --color --max-warnings=0 --concurrency $(ESLINT_CONCURRENCY)

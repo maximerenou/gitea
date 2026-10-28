@@ -1,0 +1,167 @@
+/* GitHub (Primer) component styling, shared by the theme-github-* themes. Colors come from the theme variables. */
+
+:root {
+  --border-radius: 6px;
+  --border-radius-medium: 6px;
+  --gh-btn-primary-bg: #1f883d;
+  --gh-btn-primary-hover: #1c8139;
+  --gh-btn-primary-active: #197935;
+  --gh-btn-border: #1f232826;
+  --gh-btn-shadow: 0 1px 0 #1f23280a;
+  --gh-tab-accent: #fd8c73;
+  --gh-focus-ring: 2px solid var(--color-accent);
+}
+
+/* buttons */
+:root .ui.button {
+  min-height: 32px;
+  padding: 3px 16px;
+  font-size: 14px;
+  font-weight: var(--font-weight-medium);
+  background: var(--color-button);
+  border: 1px solid var(--color-secondary);
+  box-shadow: var(--gh-btn-shadow);
+  transition: background-color 80ms cubic-bezier(0.33, 1, 0.68, 1), border-color 80ms;
+}
+:root .ui.compact.button { padding: 3px 12px; min-height: 28px; }
+:root .ui.button:hover { background: var(--color-hover-opaque); border-color: var(--color-secondary-dark-4); }
+:root .ui.button:active,
+:root .ui.active.button { background: var(--color-active); box-shadow: none; }
+:root .ui.button:focus-visible { outline: var(--gh-focus-ring); outline-offset: -2px; }
+:root .ui.primary.button,
+:root .ui.primary.buttons .button,
+:root .ui.green.button {
+  background: var(--gh-btn-primary-bg);
+  border-color: var(--gh-btn-border);
+  color: var(--color-white);
+}
+:root .ui.primary.button:hover,
+:root .ui.primary.buttons .button:hover,
+:root .ui.green.button:hover { background: var(--gh-btn-primary-hover); color: var(--color-white); }
+:root .ui.primary.button:active,
+:root .ui.primary.buttons .button:active,
+:root .ui.green.button:active { background: var(--gh-btn-primary-active); }
+:root .ui.basic.button { background: var(--color-button); color: var(--color-text); border-color: var(--color-secondary); }
+:root .ui.basic.button:hover { background: var(--color-hover-opaque); }
+:root .ui.basic.red.button,
+:root .ui.basic.negative.button { color: var(--color-red); }
+:root .ui.basic.red.button:hover { background: var(--color-red); border-color: var(--gh-btn-border); color: var(--color-white); }
+:root .ui.red.button { background: var(--color-red); border-color: var(--gh-btn-border); }
+
+/* boxes: GitHub's flat 1px-bordered "Box" with a muted header */
+:root .ui.segment,
+:root .ui.segments,
+:root .ui.attached.segment {
+  border-color: var(--color-secondary);
+  box-shadow: none;
+  border-radius: var(--border-radius);
+}
+:root .ui.attached.header {
+  background: var(--color-box-header);
+  border-color: var(--color-secondary);
+  font-size: 14px;
+  font-weight: var(--font-weight-semibold);
+  padding: 8px 16px;
+}
+:root .ui.top.attached.header { border-radius: var(--border-radius) var(--border-radius) 0 0; }
+:root .ui.attached.table,
+:root #repo-files-table { border-color: var(--color-secondary); border-radius: var(--border-radius); }
+:root #repo-files-table .repo-file-line,
+:root #repo-files-table .repo-file-cell { border-color: var(--color-secondary); padding: 8px 16px; }
+:root #repo-files-table .repo-file-line { background: var(--color-box-header); }
+
+/* tabs: GitHub's underline nav with the orange active marker */
+:root .ui.secondary.pointing.menu { border-bottom: 1px solid var(--color-secondary); }
+:root .ui.secondary.pointing.menu .item {
+  border-bottom: 2px solid transparent;
+  margin: 0 0 -1px;
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 6px 6px 0 0;
+}
+:root .ui.secondary.pointing.menu a.item:hover { background: var(--color-hover); border-radius: 6px; }
+:root .ui.secondary.pointing.menu .active.item,
+:root .ui.secondary.pointing.menu .active.item:hover {
+  border-bottom-color: var(--gh-tab-accent);
+  border-radius: 0;
+  background: transparent;
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+}
+:root .ui.tabular.menu { border-bottom-color: var(--color-secondary); }
+:root .ui.tabular.menu .active.item { border-top: 2px solid var(--gh-tab-accent); }
+
+/* navbar: GitHub's header bar */
+:root #navbar {
+  background: var(--color-nav-bg);
+  border-bottom: 1px solid var(--color-secondary);
+  box-shadow: none;
+}
+:root #navbar .item { border-radius: 6px; font-weight: var(--font-weight-medium); }
+
+/* inputs */
+:root .ui.input > input,
+:root .ui.form input:not([type="checkbox"], [type="radio"]),
+:root .ui.form textarea,
+:root .ui.selection.dropdown {
+  background: var(--color-input-background);
+  border: 1px solid var(--color-input-border);
+  border-radius: 6px;
+  box-shadow: inset 0 1px 0 var(--color-light);
+  font-size: 14px;
+}
+:root .ui.input > input:focus,
+:root .ui.form input:focus:not([type="checkbox"], [type="radio"]),
+:root .ui.form textarea:focus,
+:root .ui.selection.dropdown:focus,
+:root .ui.selection.active.dropdown {
+  border-color: var(--color-accent);
+  outline: 2px solid var(--color-accent);
+  outline-offset: -1px;
+  box-shadow: none;
+}
+
+/* labels and counters: GitHub's pill shaped badges */
+:root .ui.label { border-radius: 2em; font-weight: var(--font-weight-medium); font-size: 12px; padding: 0 7px; line-height: 18px; }
+:root .ui.circular.label { min-width: 20px; }
+:root .ui.basic.label { border: 1px solid var(--color-secondary); background: transparent; }
+
+/* dropdown menus, popups, modals */
+:root .ui.dropdown .menu,
+:root .tippy-box[data-theme="menu"] {
+  border: 1px solid var(--color-secondary);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px var(--color-shadow);
+  padding: 4px;
+}
+:root .ui.dropdown .menu > .item { border-radius: 6px; font-size: 14px; }
+:root .ui.modal { border-radius: 12px; border: 1px solid var(--color-secondary); box-shadow: 0 8px 24px var(--color-shadow); }
+:root .ui.modal > .header { border-radius: 12px 12px 0 0; background: var(--color-box-header); font-weight: var(--font-weight-semibold); font-size: 14px; }
+
+/* flash messages: GitHub flash banners */
+:root .ui.message { border-radius: 6px; box-shadow: none; border-width: 1px; border-style: solid; }
+
+/* markdown: GitHub's heading underline and code styling */
+:root .markup h1,
+:root .markup h2 { padding-bottom: 0.3em; border-bottom: 1px solid var(--color-secondary); }
+:root .markup code,
+:root .markup tt { border-radius: 6px; padding: 0.2em 0.4em; font-size: 85%; }
+:root .markup pre { border-radius: 6px; padding: 16px; }
+:root .markup table th,
+:root .markup table td { border-color: var(--color-secondary); padding: 6px 13px; }
+:root .markup blockquote { border-left: 0.25em solid var(--color-secondary); color: var(--color-text-light-1); }
+
+/* issue and PR comments: GitHub's bordered timeline cards */
+:root .timeline-item.comment .content .header { background: var(--color-box-header); }
+:root .timeline-item.comment { border-radius: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  :root .ui.button { transition: none; }
+}
+
+/* activity feed: GitHub shows actors and repos as bold default text, only hover turns them blue */
+:root #activity-feed .item-main > div:first-child a {
+  color: var(--color-text);
+  font-weight: var(--font-weight-semibold);
+}
+:root #activity-feed .item-main > div:first-child a:hover { color: var(--color-primary); }

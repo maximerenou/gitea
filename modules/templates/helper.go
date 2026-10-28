@@ -108,6 +108,12 @@ func newFuncMapWebPage() template.FuncMap {
 		"DisableWebhooks": func() bool {
 			return setting.DisableWebhooks
 		},
+		"EnableAgents": func() bool { // AGENTS-HOOK
+			return setting.Agents.Enabled && setting.Actions.Enabled
+		},
+		"EnableDependencyScanning": func() bool { // DEPSCAN-HOOK
+			return setting.DependencyScanning.Enabled
+		},
 
 		// -----------------------------------------------------------------
 		// render

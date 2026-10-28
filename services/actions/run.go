@@ -10,6 +10,7 @@ import (
 
 	act_model "gitea.dev/actionslib/pkg/model"
 	actions_model "gitea.dev/models/actions"
+	agents_model "gitea.dev/models/agents"
 	"gitea.dev/models/db"
 	"gitea.dev/modules/actions/jobparser"
 	"gitea.dev/modules/log"
@@ -61,6 +62,13 @@ func PrepareRunAndInsert(ctx context.Context, content []byte, run *actions_model
 // InsertRun inserts a run
 // The title will be cut off at 255 characters if it's longer than 255 characters.
 func InsertRun(ctx context.Context, run *actions_model.ActionRun, content []byte, vars map[string]string, inputs map[string]any, wfRawConcurrency *act_model.RawConcurrency) error {
+	if run.AgentCodeTrust == "" {
+		restricted, err := agents_model.RunsAgentCode(ctx, run)
+		if err != nil {
+			return fmt.Errorf("InsertRun: %w", err)
+		}
+		run.AgentCodeTrust = util.Iif(restricted, "restricted", "trusted")
+	}
 	var cancelledConcurrencyJobs []*actions_model.ActionRunJob
 	var needPostCommitEmit bool
 	pending := *run

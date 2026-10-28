@@ -1,0 +1,25 @@
+{{template "base/head" .}}
+<div class="page-content repository security">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		{{template "base/alert" .}}
+		{{template "repo/security/nav" .}}
+		<form class="ui form tw-mb-2" method="get">
+			<input name="q" value="{{.Keyword}}" placeholder="{{ctx.Locale.Tr "depscan.search"}}">
+		</form>
+		<table class="ui table unstackable">
+			<thead>
+				<tr><th>{{ctx.Locale.Tr "depscan.package"}}</th><th>{{ctx.Locale.Tr "depscan.version"}}</th><th>{{ctx.Locale.Tr "depscan.ecosystem"}}</th><th>{{ctx.Locale.Tr "depscan.manifest"}}</th></tr>
+			</thead>
+			<tbody>
+				{{range $d := .Dependencies}}
+					<tr><td><code>{{$d.Name}}</code></td><td><code>{{$d.Version}}</code></td><td>{{$d.Ecosystem}}</td><td class="tw-text-text-light">{{$d.Manifest}}</td></tr>
+				{{else}}
+					<tr><td colspan="4">{{ctx.Locale.Tr "depscan.no_dependencies"}}</td></tr>
+				{{end}}
+			</tbody>
+		</table>
+		{{template "base/paginate" dict "Page" .Page}}
+	</div>
+</div>
+{{template "base/footer" .}}

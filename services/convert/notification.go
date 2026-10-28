@@ -11,6 +11,7 @@ import (
 	access_model "gitea.dev/models/perm/access"
 	"gitea.dev/modules/log"
 	api "gitea.dev/modules/structs"
+	"gitea.dev/modules/util"
 )
 
 // ToNotificationThread convert a Notification to api.NotificationThread
@@ -91,6 +92,13 @@ func ToNotificationThread(ctx context.Context, n *activities_model.Notification)
 			// FIXME: this is a relative URL, rather useless and inconsistent, but keeping for backwards compat
 			URL:     n.Repository.Link(),
 			HTMLURL: n.Repository.HTMLURL(),
+		}
+	case activities_model.NotificationSourceAgentSession, activities_model.NotificationSourceSecurityAlert:
+		result.Subject = &api.NotificationSubject{
+			Type:    util.Iif(n.Source == activities_model.NotificationSourceAgentSession, api.NotifySubjectAgentSession, api.NotifySubjectSecurityAlert),
+			Title:   n.Subject,
+			URL:     n.HTMLURL(ctx),
+			HTMLURL: n.HTMLURL(ctx),
 		}
 	}
 

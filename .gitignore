@@ -120,3 +120,6 @@ prime/
 
 # A Makefile for custom make targets
 Makefile.local
+
+# local Gitea runner state, holds its registration credentials
+/agent-image/runner/

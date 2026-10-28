@@ -1,0 +1,81 @@
+{{template "admin/layout_head" (dict "ctxData" . "pageClass" "admin agents")}}
+	<div class="admin-setting-content">
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.admin.title"}}</h4>
+		<div class="ui attached segment">
+			<p>{{ctx.Locale.Tr "agents.admin.description"}}</p>
+			<div class="flex-divided-list items-with-main">
+				{{range $agent := .Agents}}
+					<div class="item">
+						<div class="item-leading">{{ctx.AvatarUtils.Avatar $agent.Bot 28}}</div>
+						<div class="item-main">
+							<div class="item-title">
+								<a href="{{AppSubUrl}}/-/admin/agents/{{$agent.ID}}">{{$agent.Name}}</a>
+								<code>@{{$agent.MentionName}}</code>
+								{{if $agent.IsDisabled}}<span class="ui mini label">{{ctx.Locale.Tr "agents.admin.disabled_label"}}</span>{{end}}
+							</div>
+							<div class="item-body flex-text-block">
+								<span>{{ctx.Locale.Tr (printf "agents.provider.%s" $agent.Provider)}}</span>
+								<span>·</span>
+								<span class="gt-ellipsis">{{$agent.BaseURL}}</span>
+								<span>·</span>
+								<code>{{$agent.Model}}</code>
+							</div>
+						</div>
+						<div class="item-trailing">
+							<a class="ui compact mini button" href="{{AppSubUrl}}/-/admin/agents/{{$agent.ID}}">{{ctx.Locale.Tr "edit"}}</a>
+						</div>
+					</div>
+				{{else}}
+					<div class="item">{{ctx.Locale.Tr "agents.admin.empty"}}</div>
+				{{end}}
+			</div>
+		</div>
+
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.usage.title"}}</h4>
+		<div class="ui attached segment">
+			{{if .Usage}}
+				<table class="ui very basic striped table unstackable">
+					<thead>
+						<tr>
+							<th>{{ctx.Locale.Tr "agents.usage.user"}}</th>
+							<th>{{ctx.Locale.Tr "agents.session.agent"}}</th>
+							<th>{{ctx.Locale.Tr "agents.usage.runs"}}</th>
+							<th>{{ctx.Locale.Tr "agents.usage.input"}}</th>
+							<th>{{ctx.Locale.Tr "agents.usage.output"}}</th>
+						</tr>
+					</thead>
+					<tbody>
+						{{range $u := .Usage}}
+							{{$user := index $.UsageUsers $u.UserID}}
+							<tr>
+								<td>{{if $user}}<a href="{{$user.HomeLink}}">{{$user.Name}}</a>{{else}}#{{$u.UserID}}{{end}}</td>
+								<td>{{with index $.UsageAgents $u.AgentID}}<code>@{{.}}</code>{{else}}—{{end}}</td>
+								<td>{{$u.Runs}}</td>
+								<td>{{$u.InputTokens}} <span class="tw-text-text-light">({{$u.CachedInputTokens}} {{ctx.Locale.Tr "agents.usage.cached"}})</span></td>
+								<td>{{$u.OutputTokens}}</td>
+							</tr>
+						{{end}}
+					</tbody>
+				</table>
+			{{else}}
+				<p class="tw-text-text-light">{{ctx.Locale.Tr "agents.usage.empty"}}</p>
+			{{end}}
+		</div>
+
+		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.admin.add"}}</h4>
+		<div class="ui attached segment">
+			<form class="ui form form-fetch-action ignore-dirty" action="{{AppSubUrl}}/-/admin/agents" method="post" autocomplete="off">
+				<div class="field">
+					<label>{{ctx.Locale.Tr "agents.admin.bot_name"}}</label>
+					<div class="ui labeled input">
+						<div class="ui label">@</div>
+						<input name="bot_name" required maxlength="40" placeholder="codex">
+					</div>
+					<p class="help">{{ctx.Locale.Tr "agents.admin.bot_name_help"}}</p>
+				</div>
+				{{template "admin/agents/fields" (dict "Providers" .Providers "OpenAIBaseURL" .OpenAIBaseURL "ReasoningEfforts" .ReasoningEfforts "Agent" nil)}}
+				<button type="submit" class="ui primary button">{{ctx.Locale.Tr "agents.admin.add"}}</button>
+			</form>
+		</div>
+	</div>
+{{template "admin/layout_footer" .}}

@@ -71,6 +71,11 @@
 				</a>
 			{{end}}
 		{{end}}
+		{{if EnableAgents}}{{/* AGENTS-HOOK */}}
+		<a class="{{if .PageIsAdminAgents}}active {{end}}item" href="{{AppSubUrl}}/-/admin/agents">
+			{{ctx.Locale.Tr "agents.admin.title"}}
+		</a>
+		{{end}}
 		{{if .EnableActions}}
 		<details class="item" {{if or .PageIsSharedSettingsRunners .PageIsSharedSettingsVariables .PageIsSharedSettingsScopedWorkflows .PageIsSharedSettingsActionsJobQueue}}open{{end}}>
 			<summary>{{ctx.Locale.Tr "actions.actions"}}</summary>

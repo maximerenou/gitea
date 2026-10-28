@@ -1,0 +1,108 @@
+{{template "base/head" .}}
+<div class="page-content repository agents">
+	{{template "repo/header" .}}
+	<div class="ui container">
+		{{template "base/alert" .}}
+		{{if .AgentsDisabledInRepo}}
+			<div class="ui warning message">{{ctx.Locale.Tr "agents.repo_settings.disabled"}}</div>
+		{{else if not .AgentsUsable}}
+			<div class="ui warning message">{{ctx.Locale.Tr "agents.unavailable"}}</div>
+		{{else if .CanStartSession}}
+			<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.session.new"}}</h4>
+			<div class="ui attached segment">
+				{{if .Agents}}
+					<form class="ui form form-fetch-action ignore-dirty" action="{{.RepoLink}}/agents/new" method="post">
+						<div class="field">
+							<label>{{ctx.Locale.Tr "agents.session.task"}}</label>
+							<textarea name="prompt" rows="4" required placeholder="{{ctx.Locale.Tr "agents.session.task_placeholder"}}"></textarea>
+						</div>
+						<div class="three fields">
+							<div class="field">
+								<label>{{ctx.Locale.Tr "agents.session.agent"}}</label>
+								<select class="ui dropdown" name="agent_id" required>
+									{{range $agent := .Agents}}
+										<option value="{{$agent.ID}}">{{$agent.Name}} (@{{$agent.MentionName}})</option>
+									{{end}}
+								</select>
+							</div>
+							<div class="field">
+								<label>{{ctx.Locale.Tr "agents.session.base_branch"}}</label>
+								{{/* the selector sets the base branch in the form action */}}
+								{{template "repo/branch_dropdown" dict
+									"Repository" .Repository
+									"ShowTabBranches" true
+									"CurrentRefType" "branch"
+									"CurrentRefShortName" .Repository.DefaultBranch
+									"RefFormActionTemplate" "{RepoLink}/agents/new?base_branch={RefShortName}"
+								}}
+							</div>
+							<div class="field">
+								<label>{{ctx.Locale.Tr "agents.reasoning_effort"}}</label>
+								<div class="ui selection dropdown">
+									<input type="hidden" name="reasoning_effort" value="">
+									<div class="default text">{{ctx.Locale.Tr "agents.reasoning_effort.agent_default"}}</div>
+									{{svg "octicon-triangle-down" 14 "dropdown icon"}}
+									<div class="menu">
+										<div class="item" data-value="">{{ctx.Locale.Tr "agents.reasoning_effort.agent_default"}}</div>
+										{{range $effort := .ReasoningEfforts}}
+											<div class="item" data-value="{{$effort}}">{{$effort}}</div>
+										{{end}}
+									</div>
+								</div>
+							</div>
+						</div>
+						<button type="submit" class="ui primary button">{{svg "octicon-sparkle"}} {{ctx.Locale.Tr "agents.session.start"}}</button>
+					</form>
+				{{else}}
+					<p>{{ctx.Locale.Tr "agents.session.no_key" .SettingsLink}}</p>
+				{{end}}
+			</div>
+		{{end}}
+
+		<div class="flex-left-right tw-mt-4">
+			<h4 class="tw-m-0">{{ctx.Locale.Tr "agents.sessions.title"}}</h4>
+			<div class="ui secondary filter menu flex-text-block tw-m-0">
+				{{if .MineFilter}}
+					<a class="ui basic small button{{if .MineFilter.Selected}} active{{end}}" href="{{.MineFilter.Link}}">{{ctx.Locale.Tr "agents.sessions.filter.mine"}}</a>
+				{{end}}
+				{{template "repo/agents/list_filter" dict "Label" (ctx.Locale.Tr "agents.sessions.filter.status") "Filters" .StatusFilters}}
+				{{template "repo/agents/list_filter" dict "Label" (ctx.Locale.Tr "agents.sessions.filter.kind") "Filters" .KindFilters}}
+				{{template "repo/agents/list_filter" dict "Label" (ctx.Locale.Tr "agents.sessions.filter.agent") "Filters" .AgentFilters}}
+			</div>
+		</div>
+		<div class="ui segment">
+			<div id="agent-session-list" class="flex-divided-list items-with-main" data-global-init="initAgentSessionList" data-live-url="{{.RepoLink}}/agents/live">
+				{{range $s := .Sessions}}
+					<div class="item tw-items-center">
+						<div class="item-leading">{{template "repo/agents/status" (dict "Status" $s.Status)}}</div>
+						<div class="item-main">
+							<div class="item-title">
+								{{if $.CanViewSession}}<a href="{{$.RepoLink}}/agents/{{$s.ID}}">{{$s.Title}}</a>{{else}}{{$s.Title}}{{end}}
+							</div>
+							<div class="item-body flex-text-block">
+								<span>#{{$s.ID}}</span>
+								<span>{{ctx.Locale.Tr (printf "agents.kind.%s" $s.Kind)}}</span>
+								{{if $s.Agent}}<code>@{{$s.Agent.MentionName}}</code>{{end}}
+								<span>{{ctx.Locale.Tr "agents.session.by" $s.Creator.HomeLink $s.Creator.GetDisplayName}}</span>
+								{{if $s.Issue}}<a href="{{$s.Issue.Link}}">#{{$s.Issue.Index}}</a>{{end}}
+							</div>
+						</div>
+						<div class="item-trailing">{{DateUtils.TimeSince $s.Updated}}</div>
+					</div>
+				{{else}}
+					<div class="empty-placeholder">
+						{{svg "octicon-sparkle" 48}}
+						{{if .IsFiltered}}
+							<h2>{{ctx.Locale.Tr "agents.sessions.filter.empty"}}</h2>
+						{{else}}
+							<h2>{{ctx.Locale.Tr "agents.sessions.empty"}}</h2>
+							<p>{{ctx.Locale.Tr "agents.sessions.empty_help"}}</p>
+						{{end}}
+					</div>
+				{{end}}
+			</div>
+		</div>
+		{{template "base/paginate" dict "Page" .Page}}
+	</div>
+</div>
+{{template "base/footer" .}}

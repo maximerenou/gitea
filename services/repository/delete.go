@@ -11,7 +11,9 @@ import (
 	actions_model "gitea.dev/models/actions"
 	activities_model "gitea.dev/models/activities"
 	admin_model "gitea.dev/models/admin"
+	agents_model "gitea.dev/models/agents"
 	"gitea.dev/models/db"
+	depscan_model "gitea.dev/models/depscan"
 	git_model "gitea.dev/models/git"
 	issues_model "gitea.dev/models/issues"
 	"gitea.dev/models/organization"
@@ -309,6 +311,14 @@ func DeleteRepositoryDirectly(ctx context.Context, repoID int64, ignoreOrgTeams 
 		return err
 	}
 
+	agentStates, err := agents_model.DeleteRepoSessions(ctx, repoID) // AGENTS-HOOK
+	if err != nil {
+		return err
+	}
+	if err := depscan_model.DeleteRepoData(ctx, repoID); err != nil { // DEPSCAN-HOOK
+		return err
+	}
+
 	if err = committer.Commit(); err != nil {
 		return err
 	}
@@ -339,6 +349,10 @@ func DeleteRepositoryDirectly(ctx context.Context, repoID int64, ignoreOrgTeams 
 		if err = system_model.CreateNotice(graceful.GetManager().ShutdownContext(), system_model.NoticeRepository, desc); err != nil {
 			log.Error("CreateRepositoryNotice: %v", err)
 		}
+	}
+
+	for _, sessionID := range agentStates { // AGENTS-HOOK
+		system_model.RemoveStorageWithNotice(ctx, storage.Actions, "Delete agent conversation", agents_model.StatePath(sessionID))
 	}
 
 	// Remove archives

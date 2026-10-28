@@ -1,0 +1,82 @@
+.agent-prompt,
+.agent-event-body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  margin: 4px 0 0;
+  font-size: 12px;
+  max-height: 320px;
+  overflow: auto;
+}
+
+.agent-event {
+  border-left: 3px solid var(--color-secondary);
+  padding: 4px 8px;
+  margin: 6px 0;
+}
+
+.agent-event-header {
+  display: flex;
+  gap: 8px;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.agent-event-status {
+  color: var(--color-text-light);
+  font-size: 12px;
+}
+
+.agent-event-message {
+  border-left-color: var(--color-primary);
+}
+
+.agent-event-markup {
+  margin-top: 4px;
+}
+
+.agent-event-reasoning summary {
+  cursor: pointer;
+}
+
+.agent-event-reasoning summary .agent-event-header {
+  display: inline-flex;
+}
+
+.agent-event-diff .added {
+  color: var(--color-green);
+}
+
+.agent-event-diff .removed {
+  color: var(--color-red);
+}
+
+.agent-event-diff .hunk {
+  color: var(--color-text-light);
+}
+
+.agent-event-reasoning {
+  color: var(--color-text-light);
+}
+
+.agent-event-error {
+  border-left-color: var(--color-red);
+}
+
+.agent-event-command .agent-event-body {
+  background: var(--color-console-bg);
+  border: 1px solid var(--color-secondary);
+  color: var(--color-console-fg);
+  padding: 6px;
+  border-radius: var(--border-radius);
+}
+
+.agent-event-todos {
+  list-style: none;
+  padding: 0;
+  margin: 4px 0 0;
+}
+
+.agent-event-todos li.done {
+  color: var(--color-text-light);
+  text-decoration: line-through;
+}

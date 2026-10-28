@@ -33,6 +33,7 @@ import (
 	"gitea.dev/modules/templates/vars"
 	"gitea.dev/modules/util"
 	"gitea.dev/modules/web/middleware"
+	"gitea.dev/routers/web/agents"
 	asymkey_service "gitea.dev/services/asymkey"
 	"gitea.dev/services/context"
 	"gitea.dev/services/context/upload"
@@ -420,6 +421,8 @@ func ViewIssue(ctx *context.Context) {
 		return
 	}
 	ctx.Data["Tags"] = tags
+
+	agents.PrepareIssueView(ctx, issue) // AGENTS-HOOK
 
 	ctx.Data["CanBlockUser"] = func(blocker, blockee *user_model.User) bool {
 		return user_service.CanBlockUser(ctx, ctx.Doer, blocker, blockee)

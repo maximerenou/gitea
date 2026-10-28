@@ -41,6 +41,7 @@ import (
 	"gitea.dev/modules/web"
 	"gitea.dev/modules/web/middleware"
 	"gitea.dev/routers/common"
+	"gitea.dev/routers/web/agents"
 	actions_service "gitea.dev/services/actions"
 	context_module "gitea.dev/services/context"
 )
@@ -247,6 +248,9 @@ func ViewWorkflowFile(ctx *context_module.Context) {
 
 	if run.IsScopedRun {
 		viewScopedWorkflowFile(ctx, run)
+		return
+	}
+	if agents.RedirectWorkflowFile(ctx, run) { // AGENTS-HOOK
 		return
 	}
 

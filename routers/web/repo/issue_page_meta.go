@@ -20,6 +20,7 @@ import (
 	"gitea.dev/modules/base"
 	"gitea.dev/modules/container"
 	"gitea.dev/modules/optional"
+	"gitea.dev/routers/web/agents"
 	shared_user "gitea.dev/routers/web/shared/user"
 	"gitea.dev/services/context"
 	issue_service "gitea.dev/services/issue"
@@ -249,6 +250,7 @@ func (d *IssuePageMetaData) retrieveAssigneesData(ctx *context.Context) {
 		ctx.ServerError("GetRepoAssignees", err)
 		return
 	}
+	d.AssigneesData.CandidateAssignees = agents.AppendOwnBotAssignees(ctx, d.Repository, d.AssigneesData.CandidateAssignees) // AGENTS-HOOK
 	d.AssigneesData.CandidateAssignees = shared_user.MakeSelfOnTop(ctx.Doer, d.AssigneesData.CandidateAssignees)
 	if d.Issue != nil {
 		_ = d.Issue.LoadAssignees(ctx)

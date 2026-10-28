@@ -16,6 +16,7 @@ import (
 	"gitea.dev/modules/private"
 	"gitea.dev/modules/util"
 	"gitea.dev/modules/web"
+	agents_service "gitea.dev/services/agents"
 	"gitea.dev/services/agit"
 	gitea_context "gitea.dev/services/context"
 	pull_service "gitea.dev/services/pull"
@@ -101,6 +102,16 @@ func HookPreReceive(ctx *gitea_context.PrivateContext) {
 		oldCommitID := opts.OldCommitIDs[i]
 		newCommitID := opts.NewCommitIDs[i]
 		refFullName := opts.RefFullNames[i]
+
+		// AGENTS-HOOK: an agent run's token may only update the branch of its session
+		if err := agents_service.CheckAgentPush(ctx, ctx.Doer, ctx.Repo.Repository.ID, refFullName, newCommitID == ctx.Repo.GetObjectFormat().EmptyObjectID().String()); err != nil {
+			ctx.PrivateUserErrorf(http.StatusForbidden, "%v", err)
+			return
+		}
+		if err := agents_service.CheckAgentWorkflows(ctx, ctx.Doer, ctx.Repo.GitRepo, ourCtx.env, oldCommitID, newCommitID); err != nil {
+			ctx.PrivateUserErrorf(http.StatusForbidden, "%v", err)
+			return
+		}
 
 		switch {
 		case refFullName.IsBranch():

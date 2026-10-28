@@ -1,0 +1,39 @@
+{{template "base/head" .}}
+<div role="main" aria-label="{{.Title}}" class="page-content user agents">
+	<div class="ui container">
+		{{template "base/alert" .}}
+		<h4 class="ui top attached header flex-left-right">
+			<span>{{ctx.Locale.Tr "agents.mine.title"}}</span>
+			<a class="ui mini basic button" href="{{.SettingsLink}}">{{ctx.Locale.Tr "agents.settings.title"}}</a>
+		</h4>
+		<div class="ui attached segment">
+			<div class="flex-divided-list items-with-main">
+				{{range $s := .Sessions}}
+					<div class="item tw-items-center">
+						<div class="item-leading">{{template "repo/agents/status" (dict "Status" $s.Status)}}</div>
+						<div class="item-main">
+							<div class="item-title">
+								<a href="{{$s.Link}}">{{$s.Title}}</a>
+							</div>
+							<div class="item-body flex-text-block">
+								<a href="{{$s.Repo.Link}}">{{$s.Repo.FullName}}</a>
+								<span>{{ctx.Locale.Tr (printf "agents.kind.%s" $s.Kind)}}</span>
+								{{if $s.Agent}}<code>@{{$s.Agent.MentionName}}</code>{{end}}
+								{{if $s.Issue}}<a href="{{$s.Issue.Link}}">#{{$s.Issue.Index}}</a>{{end}}
+							</div>
+						</div>
+						<div class="item-trailing">{{DateUtils.TimeSince $s.Updated}}</div>
+					</div>
+				{{else}}
+					<div class="empty-placeholder">
+						{{svg "octicon-sparkle" 48}}
+						<h2>{{ctx.Locale.Tr "agents.sessions.empty"}}</h2>
+						<p>{{ctx.Locale.Tr "agents.mine.empty_help"}}</p>
+					</div>
+				{{end}}
+			</div>
+		</div>
+		{{template "base/paginate" dict "Page" .Page}}
+	</div>
+</div>
+{{template "base/footer" .}}

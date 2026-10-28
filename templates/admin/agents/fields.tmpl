@@ -1,0 +1,53 @@
+<div class="field">
+	<label>{{ctx.Locale.Tr "agents.admin.display_name"}}</label>
+	<input name="name" required maxlength="255" value="{{if .Agent}}{{.Agent.Name}}{{end}}" placeholder="Codex">
+</div>
+<div class="field">
+	<label>{{ctx.Locale.Tr "agents.settings.provider"}}</label>
+	<select class="ui dropdown" name="provider" required>
+		{{range $provider := .Providers}}
+			<option value="{{$provider}}" {{if and $.Agent (eq $.Agent.Provider $provider)}}selected{{end}}>{{ctx.Locale.Tr (printf "agents.provider.%s" $provider)}}</option>
+		{{end}}
+	</select>
+	<p class="help">{{ctx.Locale.Tr "agents.settings.provider_help"}}</p>
+</div>
+<div class="field">
+	<label>{{ctx.Locale.Tr "agents.settings.base_url"}}</label>
+	<input name="base_url" type="url" maxlength="1024" placeholder="{{.OpenAIBaseURL}}" value="{{if .Agent}}{{.Agent.BaseURL}}{{end}}">
+	<p class="help">{{ctx.Locale.Tr "agents.settings.base_url_help"}}</p>
+</div>
+<div class="field">
+	<label>{{ctx.Locale.Tr "agents.settings.model"}}</label>
+	<input name="model" required maxlength="255" placeholder="gpt-5-codex" value="{{if .Agent}}{{.Agent.Model}}{{end}}">
+</div>
+<div class="field">
+	<label>{{ctx.Locale.Tr "agents.reasoning_effort"}}</label>
+	<div class="ui selection dropdown">
+		<input type="hidden" name="reasoning_effort" value="{{if .Agent}}{{.Agent.ReasoningEffort}}{{end}}">
+		<div class="default text">{{ctx.Locale.Tr "agents.reasoning_effort.default"}}</div>
+		{{svg "octicon-triangle-down" 14 "dropdown icon"}}
+		<div class="menu">
+			<div class="item" data-value="">{{ctx.Locale.Tr "agents.reasoning_effort.default"}}</div>
+			{{range $effort := .ReasoningEfforts}}
+				<div class="item" data-value="{{$effort}}">{{$effort}}</div>
+			{{end}}
+		</div>
+	</div>
+</div>
+<div class="field">
+	<label>{{ctx.Locale.Tr "agents.admin.mcp_servers"}}</label>
+	<textarea name="mcp_servers" rows="4" class="tw-font-mono" placeholder="docs: {url: https://mcp.example.com/mcp}">{{if .Agent}}{{.Agent.MCPServers}}{{end}}</textarea>
+	<p class="help">{{ctx.Locale.Tr "agents.admin.mcp_servers_help"}}</p>
+</div>
+<div class="field">
+	<div class="ui checkbox">
+		<input type="checkbox" name="allow_model_override" {{if and .Agent .Agent.AllowModelOverride}}checked{{end}}>
+		<label>{{ctx.Locale.Tr "agents.admin.allow_model_override"}}</label>
+	</div>
+</div>
+<div class="field">
+	<div class="ui checkbox">
+		<input type="checkbox" name="is_disabled" {{if and .Agent .Agent.IsDisabled}}checked{{end}}>
+		<label>{{ctx.Locale.Tr "agents.admin.disabled"}}</label>
+	</div>
+</div>

@@ -150,6 +150,12 @@ func loadCommonSettingsFrom(cfg ConfigProvider) error {
 	if err := loadActionsFrom(cfg); err != nil {
 		return err
 	}
+	if err := loadAgentsFrom(cfg); err != nil { // AGENTS-HOOK
+		return err
+	}
+	if err := loadDependencyScanningFrom(cfg); err != nil { // DEPSCAN-HOOK
+		return err
+	}
 	loadUIFrom(cfg)
 	loadAdminFrom(cfg)
 	loadAPIFrom(cfg)

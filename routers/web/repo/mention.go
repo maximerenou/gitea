@@ -11,6 +11,7 @@ import (
 	repo_model "gitea.dev/models/repo"
 	user_model "gitea.dev/models/user"
 	"gitea.dev/modules/util"
+	"gitea.dev/routers/web/agents"
 	shared_mention "gitea.dev/routers/web/shared/mention"
 	"gitea.dev/services/context"
 )
@@ -52,6 +53,11 @@ func GetMentionsInRepo(ctx *context.Context) {
 	// Get mentionable teams for org repos
 	if err := c.AddMentionableTeams(ctx, ctx.Doer, ctx.Repo.Owner); err != nil {
 		ctx.ServerError("AddMentionableTeams", err)
+		return
+	}
+
+	if err := agents.AddOwnBotMentions(ctx, c); err != nil { // AGENTS-HOOK
+		ctx.ServerError("AddOwnBotMentions", err)
 		return
 	}
 

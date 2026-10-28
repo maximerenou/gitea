@@ -427,6 +427,9 @@ func GetIndividualUserRepoPermission(ctx context.Context, repo *repo_model.Repos
 	if !repo_model.DoerTokenAllowsRepo(ctx, user, repo) {
 		return PermissionNoAccess(), nil
 	}
+	if agentPerm, ok, err := agentRepoPermission(ctx, repo, user); ok || err != nil { // AGENTS-HOOK
+		return agentPerm, err
+	}
 	defer func() {
 		if err == nil {
 			finalProcessRepoUnitPermission(user, &perm)
@@ -588,6 +591,9 @@ func HasAccessUnit(ctx context.Context, user *user_model.User, repo *repo_model.
 func CanBeAssigned(ctx context.Context, user *user_model.User, repo *repo_model.Repository) (bool, error) {
 	if user.IsOrganization() {
 		return false, util.NewInvalidArgumentErrorf("organization can't be added as assignee [user_id: %d, repo_id: %d]", user.ID, repo.ID)
+	}
+	if AgentAssignable != nil && AgentAssignable(ctx, user, repo) { // AGENTS-HOOK
+		return true, nil
 	}
 	perm, err := GetIndividualUserRepoPermission(ctx, repo, user)
 	if err != nil {
