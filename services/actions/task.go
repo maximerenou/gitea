@@ -12,6 +12,7 @@ import (
 
 	runnerv1 "gitea.dev/actionslib/runner/v1"
 	actions_model "gitea.dev/models/actions"
+	agents_model "gitea.dev/models/agents"
 	"gitea.dev/models/db"
 	secret_model "gitea.dev/models/secret"
 	"gitea.dev/modules/actions/jobparser"
@@ -141,6 +142,9 @@ func buildRunnerTask(ctx context.Context, t *actions_model.ActionTask) (*runnerv
 	secrets, err := secret_model.GetSecretsOfTask(ctx, t)
 	if err != nil {
 		return nil, nil, fmt.Errorf("GetSecretsOfTask: %w", err)
+	}
+	if err := agents_model.RestrictTaskSecrets(ctx, t, secrets); err != nil { // AGENTS-HOOK: agent tasks only get their session token
+		return nil, nil, err
 	}
 
 	vars, err := actions_model.GetVariablesOfRun(ctx, t.Job.Run)

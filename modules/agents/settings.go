@@ -81,10 +81,23 @@ func (s *Settings) Validate() error {
 	if strings.TrimSpace(s.RunnerLabel) == "" || strings.TrimSpace(s.CheckoutAction) == "" || strings.TrimSpace(s.JobImage) == "" {
 		return fmt.Errorf("runner label, checkout action and job image must not be empty")
 	}
-	if !safeForWorkflow(s.RunnerLabel) || !safeForWorkflow(s.CheckoutAction) || !safeForWorkflow(s.JobImage) {
-		return fmt.Errorf("runner label, checkout action and job image must be a single line without ${{ }} expressions")
+	if !safeForWorkflow(s.RunnerLabel) || !safeForWorkflow(s.CheckoutAction) || !safeForWorkflow(s.JobImage) || !safeForWorkflow(s.HelperDownloadURL) {
+		return fmt.Errorf("runner label, checkout action, job image and helper URL must be a single line without ${{ }} expressions")
+	}
+	for platform, sum := range s.HelperSHA256 {
+		if !validHelperPlatform(platform) || !validSHA256(sum) {
+			return fmt.Errorf("invalid helper checksum entry %q", platform)
+		}
 	}
 	return nil
+}
+
+func validHelperPlatform(p string) bool {
+	return p != "" && len(p) <= 32 && strings.Trim(p, "abcdefghijklmnopqrstuvwxyz0123456789_-.") == ""
+}
+
+func validSHA256(sum string) bool {
+	return len(sum) == 64 && strings.Trim(sum, "0123456789abcdef") == ""
 }
 
 // safeForWorkflow guards the values written into the generated workflow: the runner evaluates ${{ }} expressions
@@ -111,6 +124,14 @@ func (s *Settings) Clamp() {
 	}
 	if strings.TrimSpace(s.JobImage) == "" || !safeForWorkflow(s.JobImage) {
 		s.JobImage = def.JobImage
+	}
+	if !safeForWorkflow(s.HelperDownloadURL) {
+		s.HelperDownloadURL = ""
+	}
+	for platform, sum := range s.HelperSHA256 {
+		if !validHelperPlatform(platform) || !validSHA256(sum) {
+			delete(s.HelperSHA256, platform)
+		}
 	}
 }
 
@@ -142,7 +163,7 @@ func ParseHelperSums(text string) (map[string]string, error) {
 		}
 		platform, sum, ok := strings.Cut(line, "=")
 		platform, sum = strings.TrimSpace(platform), strings.ToLower(strings.TrimSpace(sum))
-		if !ok || platform == "" || len(sum) != 64 || strings.Trim(sum, "0123456789abcdef") != "" {
+		if !ok || !validHelperPlatform(platform) || !validSHA256(sum) {
 			return nil, fmt.Errorf("invalid helper checksum line %q, expected <os>-<arch>=<sha256 hex>", line)
 		}
 		sums[platform] = sum

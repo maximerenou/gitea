@@ -53,6 +53,19 @@ func TestSettingsBounds(t *testing.T) {
 		assert.Equal(t, def.JobImage, s.JobImage)
 	}
 
+	// the helper URL and the checksum keys also end up in the workflow
+	s = DefaultSettings()
+	s.HelperDownloadURL = "https://x/${{ secrets.AGENT_SESSION_TOKEN }}"
+	assert.Error(t, s.Validate())
+	s.Clamp()
+	assert.Empty(t, s.HelperDownloadURL)
+	s.HelperSHA256 = map[string]string{"linux-amd64": strings.Repeat("a", 64), "${{ x }}": strings.Repeat("a", 64), "linux-arm64": "short"}
+	assert.Error(t, s.Validate())
+	s.Clamp()
+	assert.Equal(t, map[string]string{"linux-amd64": strings.Repeat("a", 64)}, s.HelperSHA256)
+	_, err := ParseHelperSums("${{ x }}=" + strings.Repeat("a", 64))
+	assert.Error(t, err)
+
 	s = DefaultSettings()
 	s.RunnerLabel = " "
 	assert.Error(t, s.Validate())
