@@ -188,6 +188,7 @@ const (
 	ReviewProblemAgentGone       = "agent_gone"
 	ReviewProblemAgentDisabled   = "agent_disabled"
 	ReviewProblemAgentNotAllowed = "agent_not_allowed"
+	ReviewProblemRepoUnusable    = "repo_unusable"
 	ReviewProblemNoKey           = "no_key"
 	ReviewProblemLimit           = "limit"
 )
@@ -211,6 +212,9 @@ func reviewSetup(ctx context.Context, repo *repo_model.Repository, rs *agents_mo
 	}
 	if agent.IsDisabled {
 		return nil, nil, ReviewProblemAgentDisabled, nil
+	}
+	if rs.Enabled && !IsRepoUsable(ctx, repo) { // agents are on for the repository but it cannot run them, e.g. Actions are off
+		return nil, nil, ReviewProblemRepoUnusable, nil
 	}
 	if !IsAgentAllowed(ctx, repo, agent) {
 		return nil, nil, ReviewProblemAgentNotAllowed, nil

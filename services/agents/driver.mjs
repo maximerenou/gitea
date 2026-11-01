@@ -48,7 +48,8 @@ const setupShell = `#!/bin/sh
 user_path="\${PATH:-/usr/local/bin:/usr/bin:/bin}"
 PATH=/usr/sbin:/usr/bin:/sbin:/bin
 IFS=' \t\n'
-unset LD_PRELOAD LD_LIBRARY_PATH LD_AUDIT GLIBC_TUNABLES BASH_ENV ENV CDPATH SHELLOPTS BASHOPTS PS4 GCONV_PATH LOCPATH NLSPATH HOSTALIASES
+unset LD_PRELOAD LD_LIBRARY_PATH LD_AUDIT GLIBC_TUNABLES BASH_ENV ENV CDPATH PS4 GCONV_PATH LOCPATH NLSPATH HOSTALIASES
+command unset SHELLOPTS BASHOPTS 2>/dev/null || true # readonly when sh is bash, the env -u below keeps them from the step
 export PATH
 set -eu
 shell="$1"
@@ -66,8 +67,8 @@ export GITHUB_ENV=${setupDir}/env GITHUB_PATH=${setupDir}/path GITHUB_OUTPUT=/de
 limit=""
 if [ "$minutes" -gt 0 ]; then limit="/usr/bin/timeout --kill-after=10 \${minutes}m"; fi
 status=0
-if [ "$shell" = sh ]; then $limit /sbin/runuser -u ${agentUser} -- /usr/bin/env PATH="$user_path" sh -e "$script" || status=$?
-else $limit /sbin/runuser -u ${agentUser} -- /usr/bin/env PATH="$user_path" bash --noprofile --norc -eo pipefail "$script" || status=$?; fi
+if [ "$shell" = sh ]; then $limit /sbin/runuser -u ${agentUser} -- /usr/bin/env -u SHELLOPTS -u BASHOPTS PATH="$user_path" sh -e "$script" || status=$?
+else $limit /sbin/runuser -u ${agentUser} -- /usr/bin/env -u SHELLOPTS -u BASHOPTS PATH="$user_path" bash --noprofile --norc -eo pipefail "$script" || status=$?; fi
 kill_leftovers
 exit "$status"
 `;

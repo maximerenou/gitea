@@ -122,4 +122,4 @@ prime/
 Makefile.local
 
 # local Gitea runner state, holds its registration credentials
-/agent-image/runner/
+/gitea-agent/runner/

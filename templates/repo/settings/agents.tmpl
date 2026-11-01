@@ -3,6 +3,7 @@
 		<h4 class="ui top attached header">{{ctx.Locale.Tr "agents.title"}}</h4>
 		<div class="ui attached segment">
 			<p>{{ctx.Locale.Tr "agents.repo_settings.description"}}</p>
+			{{if .AgentsUnusable}}<div class="ui warning message">{{ctx.Locale.Tr "agents.repo_settings.unusable"}}</div>{{end}}
 			<form class="ui form form-fetch-action ignore-dirty" action="{{.RepoLink}}/settings/agents" method="post">
 				<div class="field">
 					<div class="ui checkbox">

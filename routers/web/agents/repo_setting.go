@@ -32,6 +32,7 @@ func RepoSetting(ctx *context.Context) {
 		return
 	}
 	ctx.Data["RepoSetting"] = rs
+	ctx.Data["AgentsUnusable"] = rs.Enabled && !agents_service.IsRepoUsable(ctx, ctx.Repo.Repository)
 	ctx.Data["Agents"] = agents
 	ctx.Data["AllowedAgentIDs"] = rs.AllowedAgentIDs
 	if rs.ReviewAgentID > 0 {
